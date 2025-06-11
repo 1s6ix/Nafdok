@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Note for Us</title>
 <style>
-  /* CSS Variables for theme and spacing */
   :root {
     --color-bg: #ffffff;
-    --color-text: #374151; /* Neutral gray-700 */
-    --color-text-muted: #6b7280; /* Neutral gray-500 */
-    --color-primary: #111827; /* Neutral gray-900 */
-    --color-primary-hover: #1f2937; /* Neutral gray-800 */
-    --card-bg: #f9fafb; /* Neutral gray-50 */
+    --color-text: #374151;
+    --color-text-muted: #6b7280;
+    --color-primary: #111827;
+    --color-primary-hover: #1f2937;
+    --card-bg: #f9fafb;
     --card-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
     --border-radius: 0.75rem;
     --font-heading: 'Poppins', system-ui, sans-serif;
@@ -23,10 +22,7 @@
 
   @import url('https://fonts.googleapis.com/css2?family=Inter&family=Poppins:wght@600&display=swap');
 
-  /* Reset and base */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--color-bg);
@@ -38,15 +34,9 @@
     flex-direction: column;
   }
 
-  a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-  a:hover, button:hover {
-    color: var(--color-primary-hover);
-  }
+  a { color: var(--color-primary); text-decoration: none; }
+  a:hover, button:hover { color: var(--color-primary-hover); }
 
-  /* Container */
   .container {
     width: min(100% - 2rem, 1200px);
     margin: 0 auto;
@@ -54,7 +44,6 @@
     flex: 1;
   }
 
-  /* Header */
   header {
     position: sticky;
     top: 0;
@@ -100,14 +89,12 @@
     transform: scale(1.05);
   }
 
-  /* Notes layout */
   #notes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--spacing-gap);
   }
 
-  /* Note Card */
   .note-card {
     background: var(--card-bg);
     border-radius: var(--border-radius);
@@ -121,7 +108,6 @@
     box-shadow: 0 4px 14px rgb(0 0 0 / 0.15);
   }
 
-  /* Note header */
   .note-header {
     display: flex;
     justify-content: space-between;
@@ -136,7 +122,6 @@
     color: var(--color-primary);
   }
 
-  /* Edit, Delete buttons */
   .note-actions button {
     background: transparent;
     border: none;
@@ -153,7 +138,6 @@
     transform: scale(1.1);
   }
 
-  /* Editable Note content */
   .note-content {
     flex: 1;
     border: none;
@@ -173,7 +157,6 @@
     outline: 2px solid var(--color-primary);
   }
 
-  /* Toggle panel for customization */
   #customizePanel {
     margin-top: 2.5rem;
     border-top: 1px solid #e5e7eb;
@@ -199,8 +182,7 @@
     height: 1.2rem;
   }
 
-  /* Password protection styles */
-  #passwordOverlay {
+  #passwordOverlay, #fullAccessOverlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -213,7 +195,7 @@
     z-index: 100;
   }
 
-  #passwordForm {
+  #passwordForm, #fullAccessForm {
     background: var(--card-bg);
     padding: 2rem;
     border-radius: var(--border-radius);
@@ -222,13 +204,13 @@
     max-width: 400px;
   }
 
-  #passwordForm h2 {
+  #passwordForm h2, #fullAccessForm h2 {
     margin-top: 0;
     color: var(--color-primary);
     font-family: var(--font-heading);
   }
 
-  #passwordInput {
+  #passwordInput, #fullAccessInput {
     width: 100%;
     padding: 0.75rem;
     margin: 1rem 0;
@@ -238,12 +220,12 @@
     font-size: 1rem;
   }
 
-  #passwordInput:focus {
+  #passwordInput:focus, #fullAccessInput:focus {
     outline: none;
     border-color: var(--color-primary);
   }
 
-  #passwordSubmit {
+  #passwordSubmit, #fullAccessSubmit {
     width: 100%;
     padding: 0.75rem;
     background: var(--color-primary);
@@ -256,18 +238,33 @@
     transition: background-color var(--transition-speed);
   }
 
-  #passwordSubmit:hover {
+  #passwordSubmit:hover, #fullAccessSubmit:hover {
     background: var(--color-primary-hover);
   }
 
-  #passwordError {
+  #passwordError, #fullAccessError {
     color: #ef4444;
     margin-top: 0.5rem;
     font-size: 0.9rem;
     display: none;
   }
 
-  /* Responsive adjustments */
+  #viewOnlyLoginBtn {
+    margin: 2rem auto 0 auto;
+    display: block;
+    font-size: 1rem;
+    padding: 0.7rem 1.3rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+  }
+  #viewOnlyLoginBtn:hover {
+    background: var(--color-primary-hover);
+  }
+
   @media (max-width: 480px) {
     header h1 {
       font-size: 1.5rem;
@@ -279,6 +276,7 @@
     #notes {
       grid-template-columns: 1fr;
     }
+    #viewOnlyLoginBtn { width: 100%; }
   }
 </style>
 </head>
@@ -290,6 +288,16 @@
     <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off" />
     <p id="passwordError">Bitch fuck off from here , Dont back pls</p>
     <button id="passwordSubmit">Press me to move on </button>
+  </div>
+</div>
+
+<!-- Full access overlay (appears in view-only mode) -->
+<div id="fullAccessOverlay" style="display: none;">
+  <div id="fullAccessForm">
+    <h2>Enter full access code</h2>
+    <input type="password" id="fullAccessInput" placeholder="Enter full access code" autocomplete="off" />
+    <p id="fullAccessError">Wrong code! If you don't know it, go away.</p>
+    <button id="fullAccessSubmit">Login</button>
   </div>
 </div>
 
@@ -309,49 +317,18 @@
       <h2>Edit</h2>
       <div id="customizeCheckboxes"></div>
     </section>
+    <button id="viewOnlyLoginBtn" style="display: none;">Login for full access</button>
   </main>
 </div>
 
 <script>
-  // Password configuration
+  // Config
   const CORRECT_PASSWORD = "11331122";
+  const FULL_ACCESS_CODE = "pay gorn";
   const PASSWORD_STORAGE_KEY = "notesAppAuthenticated";
+  const FULL_ACCESS_KEY = "notesAppFullAccess";
 
-  // Check if already authenticated
-  function checkAuth() {
-    return localStorage.getItem(PASSWORD_STORAGE_KEY) === "true";
-  }
-
-  // Handle password submission
-  function handlePasswordSubmit() {
-    const passwordInput = document.getElementById('passwordInput');
-    const passwordError = document.getElementById('passwordError');
-    
-    if (passwordInput.value === CORRECT_PASSWORD) {
-      // Correct password
-      localStorage.setItem(PASSWORD_STORAGE_KEY, "true");
-      document.getElementById('passwordOverlay').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      initApp();
-    } else {
-      // Wrong password
-      passwordError.style.display = 'block';
-      passwordInput.value = '';
-      passwordInput.focus();
-    }
-  }
-
-  // Set up password form
-  function setupPasswordForm() {
-    document.getElementById('passwordSubmit').addEventListener('click', handlePasswordSubmit);
-    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        handlePasswordSubmit();
-      }
-    });
-  }
-
-  // Initial default notes content
+  // Default notes
   const defaultNotes = [
     { id: 'note1', title: 'dream', content: 'i wish i hade someone really understand me like ... idk won i cant type here bcuz anyways u see it :3' },
     { id: 'note2', title: 'NIGGA', content: 'https://www.youtube.com/watch?v=LgUnKB2nY-4' },
@@ -364,7 +341,7 @@
     { id: 'note9', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
   ];
 
-  // State of notes (id, title, content, visible)
+  // App state
   let notes = JSON.parse(localStorage.getItem('notes')) || defaultNotes.map(n => ({ ...n, visible: true }));
 
   // Helper to save notes state to localStorage
@@ -372,95 +349,191 @@
     localStorage.setItem('notes', JSON.stringify(notes));
   }
 
-  // Create note card element
-  function createNoteCard(note) {
+  // Auth state
+  function isAuthenticated() {
+    return localStorage.getItem(PASSWORD_STORAGE_KEY) === "true";
+  }
+  function hasFullAccess() {
+    return localStorage.getItem(FULL_ACCESS_KEY) === "true";
+  }
+  function setAuthenticated() {
+    localStorage.setItem(PASSWORD_STORAGE_KEY, "true");
+  }
+  function setFullAccess() {
+    localStorage.setItem(FULL_ACCESS_KEY, "true");
+  }
+
+  // Password submit
+  function handlePasswordSubmit() {
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    if (passwordInput.value === CORRECT_PASSWORD) {
+      setAuthenticated();
+      document.getElementById('passwordOverlay').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      renderApp();
+    } else {
+      passwordError.style.display = 'block';
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  }
+  function setupPasswordForm() {
+    document.getElementById('passwordSubmit').addEventListener('click', handlePasswordSubmit);
+    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handlePasswordSubmit();
+    });
+  }
+
+  // Full access code submit
+  function handleFullAccessSubmit() {
+    const codeInput = document.getElementById('fullAccessInput');
+    const codeError = document.getElementById('fullAccessError');
+    if (codeInput.value.trim() === FULL_ACCESS_CODE) {
+      setFullAccess();
+      document.getElementById('fullAccessOverlay').style.display = 'none';
+      renderApp();
+    } else {
+      codeError.style.display = 'block';
+      codeInput.value = '';
+      codeInput.focus();
+    }
+  }
+  function setupFullAccessForm() {
+    document.getElementById('fullAccessSubmit').addEventListener('click', handleFullAccessSubmit);
+    document.getElementById('fullAccessInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handleFullAccessSubmit();
+    });
+  }
+
+  // Note Card (editable / readonly)
+  function createNoteCard(note, readonly = false) {
     const card = document.createElement('article');
     card.className = 'note-card';
     card.setAttribute('data-note-id', note.id);
 
-    card.innerHTML = `
-      <div class="note-header">
-        <h3 class="note-title" contenteditable="true" aria-label="Edit note title">${note.title}</h3>
-        <div class="note-actions">
-          <button aria-label="Delete note">&times;</button>
-        </div>
-      </div>
-      <textarea class="note-content" aria-label="Edit note content">${note.content}</textarea>
-    `;
-
-    // Update title on edit
-    const titleEl = card.querySelector('.note-title');
-    titleEl.addEventListener('input', () => {
-      note.title = titleEl.innerText.trim() || 'Untitled';
-      saveNotes();
-      updateCustomizePanel();
-    });
-    titleEl.addEventListener('blur', () => {
-      // Clean up whitespaces
+    // Title section
+    let titleEl;
+    if (readonly) {
+      titleEl = document.createElement('h3');
+      titleEl.className = 'note-title';
       titleEl.innerText = note.title;
-    });
-
-    // Update content on edit
-    const contentEl = card.querySelector('.note-content');
-    contentEl.addEventListener('input', () => {
-      note.content = contentEl.value;
-      saveNotes();
-    });
-
-    // Delete note handler
-    const delBtn = card.querySelector('button');
-    delBtn.addEventListener('click', () => {
-      if (confirm(`Delete note "${note.title}"?`)) {
-        notes = notes.filter(n => n.id !== note.id);
+    } else {
+      titleEl = document.createElement('h3');
+      titleEl.className = 'note-title';
+      titleEl.contentEditable = true;
+      titleEl.setAttribute('aria-label', 'Edit note title');
+      titleEl.innerText = note.title;
+      titleEl.addEventListener('input', () => {
+        note.title = titleEl.innerText.trim() || 'Untitled';
         saveNotes();
-        renderNotes();
         updateCustomizePanel();
-      }
-    });
+      });
+      titleEl.addEventListener('blur', () => {
+        titleEl.innerText = note.title;
+      });
+    }
+
+    // Content section
+    let contentEl;
+    if (readonly) {
+      contentEl = document.createElement('div');
+      contentEl.className = 'note-content';
+      contentEl.innerText = note.content;
+      contentEl.style.whiteSpace = 'pre-wrap';
+    } else {
+      contentEl = document.createElement('textarea');
+      contentEl.className = 'note-content';
+      contentEl.setAttribute('aria-label', 'Edit note content');
+      contentEl.value = note.content;
+      contentEl.addEventListener('input', () => {
+        note.content = contentEl.value;
+        saveNotes();
+      });
+    }
+
+    // Actions
+    const header = document.createElement('div');
+    header.className = 'note-header';
+    header.appendChild(titleEl);
+
+    if (!readonly) {
+      const actions = document.createElement('div');
+      actions.className = 'note-actions';
+      const delBtn = document.createElement('button');
+      delBtn.setAttribute('aria-label', 'Delete note');
+      delBtn.innerHTML = '&times;';
+      delBtn.addEventListener('click', () => {
+        if (confirm(`Delete note "${note.title}"?`)) {
+          notes = notes.filter(n => n.id !== note.id);
+          saveNotes();
+          renderNotes();
+          updateCustomizePanel();
+        }
+      });
+      actions.appendChild(delBtn);
+      header.appendChild(actions);
+    }
+
+    card.appendChild(header);
+    card.appendChild(contentEl);
 
     return card;
   }
 
-  // Render notes list to the page
+  // Render notes
   function renderNotes() {
-    const container = document.getElementById('notes');
-    container.innerHTML = '';
+    const notesContainer = document.getElementById('notes');
+    notesContainer.innerHTML = '';
+    const readonly = !hasFullAccess();
     notes.forEach(note => {
       if (note.visible !== false) {
-        container.appendChild(createNoteCard(note));
+        notesContainer.appendChild(createNoteCard(note, readonly));
       }
     });
   }
 
-  // Update the customize panel with checkboxes for note toggling
+  // Customize panel (checkboxes)
   function updateCustomizePanel() {
+    const customizePanel = document.getElementById('customizePanel');
     const container = document.getElementById('customizeCheckboxes');
     container.innerHTML = '';
-
+    if (!hasFullAccess()) {
+      // Hide panel in view-only
+      customizePanel.style.display = 'none';
+      return;
+    }
+    customizePanel.style.display = '';
     notes.forEach(note => {
       const label = document.createElement('label');
       label.htmlFor = `toggle-${note.id}`;
-
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = `toggle-${note.id}`;
       checkbox.checked = note.visible !== false;
       checkbox.setAttribute('aria-checked', checkbox.checked);
-
       checkbox.addEventListener('change', () => {
         note.visible = checkbox.checked;
         saveNotes();
         renderNotes();
       });
-
       label.appendChild(checkbox);
       label.appendChild(document.createTextNode(note.title));
-
       container.appendChild(label);
     });
   }
 
-  // Add a new note to the list
+  // Reset notes
+  function resetNotes() {
+    if (confirm('Reset all notes to default? This cannot be undone.')) {
+      notes = defaultNotes.map(n => ({ ...n, visible: true }));
+      saveNotes();
+      renderNotes();
+      updateCustomizePanel();
+    }
+  }
+
+  // Add new note (not shown, but can be added for full features)
   function addNewNote() {
     const newId = `note${Date.now()}`;
     const newNote = {
@@ -473,46 +546,57 @@
     saveNotes();
     renderNotes();
     updateCustomizePanel();
-
-    // Focus on new note title for convenience
     setTimeout(() => {
       const newCard = document.querySelector(`[data-note-id="${newId}"]`);
       if (newCard) {
         const title = newCard.querySelector('.note-title');
-        title.focus();
+        title && title.focus();
       }
     }, 0);
   }
 
-  // Reset notes to default and clear all localStorage changes
-  function resetNotes() {
-    if (confirm('Reset all notes to default? This cannot be undone.')) {
-      notes = defaultNotes.map(n => ({ ...n, visible: true }));
-      saveNotes();
-      renderNotes();
-      updateCustomizePanel();
-    }
-  }
+  // Render the entire app depending on access
+  function renderApp() {
+    // Hide overlays
+    document.getElementById('passwordOverlay').style.display = 'none';
+    document.getElementById('fullAccessOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
 
-  // Initialize app (only called after password is entered)
-  function initApp() {
+    // Header/buttons
+    const resetBtn = document.getElementById('resetNotesBtn');
+    const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
+    // Full access = show all; else, hide controls
+    if (hasFullAccess()) {
+      resetBtn.style.display = '';
+      document.getElementById('customizePanel').style.display = '';
+      viewOnlyLoginBtn.style.display = 'none';
+      resetBtn.onclick = resetNotes;
+    } else {
+      resetBtn.style.display = 'none';
+      document.getElementById('customizePanel').style.display = 'none';
+      viewOnlyLoginBtn.style.display = '';
+      viewOnlyLoginBtn.onclick = () => {
+        document.getElementById('fullAccessOverlay').style.display = 'flex';
+        document.getElementById('fullAccessInput').focus();
+      };
+    }
+
+    // Render UI
     renderNotes();
     updateCustomizePanel();
-
-    // Bind reset button
-    document.getElementById('resetNotesBtn').addEventListener('click', resetNotes);
   }
 
-  // Check authentication on load
+  // On load
   document.addEventListener('DOMContentLoaded', () => {
-    if (checkAuth()) {
+    if (isAuthenticated()) {
       document.getElementById('passwordOverlay').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
-      initApp();
+      renderApp();
     } else {
       setupPasswordForm();
       document.getElementById('passwordInput').focus();
     }
+    setupFullAccessForm();
   });
 </script>
 </body>
