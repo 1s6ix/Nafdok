@@ -298,7 +298,6 @@
   <header>
     <h1>Note for me and won :3</h1>
     <nav>
-      <button id="addNoteBtn" aria-label="Add new note">+ Add Note</button>
       <button id="resetNotesBtn" aria-label="Reset to default notes">Reset</button>
     </nav>
   </header>
@@ -499,9 +498,6 @@
   function initApp() {
     renderNotes();
     updateCustomizePanel();
-
-    // Bind add note button
-    document.getElementById('addNoteBtn').addEventListener('click', addNewNote);
 
     // Bind reset button
     document.getElementById('resetNotesBtn').addEventListener('click', resetNotes);
