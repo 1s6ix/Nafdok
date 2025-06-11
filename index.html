@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Note for Us</title>
 <style>
+  /* ... (CSS mostly unchanged, but I'll improve error UI, ARIA, and responsive tweaks below) ... */
+
   :root {
     --color-bg: #ffffff;
     --color-text: #374151;
@@ -19,9 +21,16 @@
     --spacing-gap: 1.5rem;
     --transition-speed: 0.3s;
   }
-
+  body.dark {
+    --color-bg: #18181b;
+    --color-text: #d1d5db;
+    --color-text-muted: #a1a1aa;
+    --color-primary: #facc15;
+    --color-primary-hover: #fde047;
+    --card-bg: #27272a;
+    --card-shadow: 0 1px 10px rgb(0 0 0 / 0.5);
+  }
   @import url('https://fonts.googleapis.com/css2?family=Inter&family=Poppins:wght@600&display=swap');
-
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -32,8 +41,8 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: background var(--transition-speed), color var(--transition-speed);
   }
-
   a { color: var(--color-primary); text-decoration: none; }
   a:hover, button:hover { color: var(--color-primary-hover); }
 
@@ -43,7 +52,6 @@
     padding: 3rem 0;
     flex: 1;
   }
-
   header {
     position: sticky;
     top: 0;
@@ -55,8 +63,8 @@
     padding: 1rem 1.5rem;
     z-index: 10;
     box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+    transition: background var(--transition-speed), color var(--transition-speed);
   }
-
   header h1 {
     font-family: var(--font-heading);
     font-weight: 700;
@@ -64,9 +72,14 @@
     margin: 0;
     color: var(--color-primary);
     user-select: none;
+    transition: color var(--transition-speed);
   }
-
-  nav button {
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  nav button, #resetNotesBtn {
     font-family: var(--font-body);
     font-size: 1rem;
     padding: 0.5rem 1rem;
@@ -77,24 +90,36 @@
     cursor: pointer;
     transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
     user-select: none;
-    margin-left: 0.75rem;
   }
-  nav button:focus-visible {
+  nav button:focus-visible, #resetNotesBtn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
-  nav button:hover {
+  nav button:hover, #resetNotesBtn:hover {
     background-color: var(--color-primary);
     color: var(--color-bg);
-    transform: scale(1.05);
+    transform: scale(1.08);
   }
-
+  #darkToggle {
+    border: none;
+    background: none;
+    font-size: 1.4rem;
+    padding: 0.2rem 0.7rem;
+    margin-left: 0.4rem;
+    color: var(--color-primary);
+    transition: color var(--transition-speed), transform 0.2s;
+    outline: none;
+  }
+  #darkToggle:hover {
+    color: var(--color-primary-hover);
+    background: none;
+    transform: scale(1.2) rotate(-12deg);
+  }
   #notes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--spacing-gap);
   }
-
   .note-card {
     background: var(--card-bg);
     border-radius: var(--border-radius);
@@ -102,17 +127,28 @@
     padding: 1rem 1.25rem;
     display: flex;
     flex-direction: column;
-    transition: box-shadow var(--transition-speed);
+    transition: box-shadow var(--transition-speed), background var(--transition-speed), color var(--transition-speed), transform 0.3s cubic-bezier(.23,1.02,.53,.97);
+    position: relative;
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    animation: cardIn 0.5s cubic-bezier(.23,1.02,.53,.97) forwards;
   }
   .note-card:focus-within, .note-card:hover {
     box-shadow: 0 4px 14px rgb(0 0 0 / 0.15);
+    transform: scale(1.04) translateY(-3px);
   }
-
+  @keyframes cardIn {
+    to {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+    }
+  }
   .note-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.75rem;
+    gap: 0.5rem;
   }
   .note-title {
     font-family: var(--font-heading);
@@ -120,8 +156,14 @@
     font-size: 1.25rem;
     margin: 0;
     color: var(--color-primary);
+    flex: 1 1 auto;
+    transition: color var(--transition-speed);
   }
-
+  .note-actions {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+  }
   .note-actions button {
     background: transparent;
     border: none;
@@ -130,14 +172,14 @@
     padding: 0.25rem 0.5rem;
     border-radius: var(--border-radius);
     font-weight: 600;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+    transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
+    font-size: 1.15rem;
   }
   .note-actions button:hover {
     background-color: var(--color-primary);
     color: var(--color-bg);
-    transform: scale(1.1);
+    transform: scale(1.12) rotate(-8deg);
   }
-
   .note-content {
     flex: 1;
     border: none;
@@ -156,13 +198,18 @@
   .note-content:focus {
     outline: 2px solid var(--color-primary);
   }
-
   #customizePanel {
     margin-top: 2.5rem;
     border-top: 1px solid #e5e7eb;
     padding-top: 1.5rem;
     font-size: 0.9rem;
     color: var(--color-text-muted);
+    transition: color var(--transition-speed), border-color var(--transition-speed);
+    animation: fadeInPanel 0.7s cubic-bezier(.23,1.02,.53,.97);
+  }
+  @keyframes fadeInPanel {
+    from { opacity: 0; transform: translateY(30px);}
+    to { opacity: 1; transform: translateY(0);}
   }
   #customizePanel h2 {
     font-family: var(--font-heading);
@@ -170,18 +217,58 @@
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
   }
-  #customizePanel label {
+  #customizeCheckboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+  }
+  .customize-row {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
+    gap: 0.9em;
+    padding: 0.5em 0.7em;
+    background: var(--card-bg);
+    border-radius: 0.5em;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+    font-size: 1.05em;
+    cursor: grab;
+    transition: background 0.18s, border 0.18s, box-shadow 0.18s;
+    user-select: none;
+    border: 2px solid transparent;
+    min-height: 2.4em;
+    touch-action: pan-y;
   }
-  #customizePanel input[type="checkbox"] {
-    margin-right: 0.75rem;
-    width: 1.2rem;
-    height: 1.2rem;
+  .customize-row:active { cursor: grabbing; }
+  .customize-row .drag-icon {
+    font-size: 1.4em;
+    margin-right: 0.35em;
+    cursor: grab;
+    opacity: 0.9;
+    user-select: none;
+    transition: color 0.2s;
   }
-
+  .customize-row.dragging {
+    opacity: 0.4;
+    background: #fff6d1;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    z-index: 1;
+  }
+  body.dark .customize-row.dragging { background: #453c24; }
+  .customize-row.dragover {
+    border: 2px dashed var(--color-primary);
+    background: #e8f3ff;
+  }
+  body.dark .customize-row.dragover { background: #32363c; }
+  .customize-row input[type="checkbox"] {
+    accent-color: var(--color-primary);
+    width: 1.2em;
+    height: 1.2em;
+    margin-right: 0.2em;
+    margin-left: 0.1em;
+    flex-shrink: 0;
+  }
   #passwordOverlay, #fullAccessOverlay {
     position: fixed;
     top: 0;
@@ -193,8 +280,12 @@
     justify-content: center;
     align-items: center;
     z-index: 100;
+    animation: fadeInOverlay 0.7s cubic-bezier(.23,1.02,.53,.97);
   }
-
+  @keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
   #passwordForm, #fullAccessForm {
     background: var(--card-bg);
     padding: 2rem;
@@ -202,14 +293,17 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 90%;
     max-width: 400px;
+    animation: panelPopIn 0.6s cubic-bezier(.23,1.02,.53,.97);
   }
-
+  @keyframes panelPopIn {
+    from { transform: scale(0.92) translateY(30px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
   #passwordForm h2, #fullAccessForm h2 {
     margin-top: 0;
     color: var(--color-primary);
     font-family: var(--font-heading);
   }
-
   #passwordInput, #fullAccessInput {
     width: 100%;
     padding: 0.75rem;
@@ -218,13 +312,12 @@
     border-radius: var(--border-radius);
     font-family: var(--font-body);
     font-size: 1rem;
+    transition: border-color var(--transition-speed);
   }
-
   #passwordInput:focus, #fullAccessInput:focus {
     outline: none;
     border-color: var(--color-primary);
   }
-
   #passwordSubmit, #fullAccessSubmit {
     width: 100%;
     padding: 0.75rem;
@@ -235,20 +328,28 @@
     font-family: var(--font-body);
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color var(--transition-speed);
+    transition: background-color var(--transition-speed), transform 0.2s;
   }
-
   #passwordSubmit:hover, #fullAccessSubmit:hover {
     background: var(--color-primary-hover);
+    transform: scale(1.07);
   }
-
-  #passwordError, #fullAccessError {
+  .error-message {
     color: #ef4444;
     margin-top: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     display: none;
+    animation: shake 0.25s;
+    background: #fef2f2;
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.6rem;
   }
-
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px);}
+    20%, 80% { transform: translateX(4px);}
+    30%, 50%, 70% { transform: translateX(-8px);}
+    40%, 60% { transform: translateX(8px);}
+  }
   #viewOnlyLoginBtn {
     margin: 2rem auto 0 auto;
     display: block;
@@ -259,17 +360,23 @@
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: background-color var(--transition-speed);
+    transition: background-color var(--transition-speed), transform 0.2s;
   }
   #viewOnlyLoginBtn:hover {
     background: var(--color-primary-hover);
+    transform: scale(1.08) rotate(-3deg);
   }
-
+  /* Accessibility: better focus ring for all buttons */
+  button:focus-visible {
+    outline: 2px solid var(--color-primary-hover);
+    outline-offset: 2px;
+  }
+  /* Responsive improvements */
   @media (max-width: 480px) {
     header h1 {
       font-size: 1.5rem;
     }
-    nav button {
+    nav button, #resetNotesBtn {
       padding: 0.4rem 0.75rem;
       font-size: 0.9rem;
     }
@@ -277,27 +384,33 @@
       grid-template-columns: 1fr;
     }
     #viewOnlyLoginBtn { width: 100%; }
+    .customize-row { font-size: 0.97em; padding: 0.44em 0.3em; }
+  }
+  /* Hide file input visually but keep it accessible */
+  #importNotesInput {
+    position: absolute;
+    left: -9999px;
   }
 </style>
 </head>
 <body>
 <!-- Password overlay (shown first) -->
-<div id="passwordOverlay">
+<div id="passwordOverlay" aria-modal="true" role="dialog">
   <div id="passwordForm">
-    <h2>If u dont know the password , Pls go dont try !</h2>
-    <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off" />
-    <p id="passwordError">Bitch fuck off from here , Dont back pls</p>
-    <button id="passwordSubmit">Press me to move on </button>
+    <h2>Enter password to continue</h2>
+    <input type="password" id="passwordInput" aria-label="Enter password" placeholder="Enter password" autocomplete="off" />
+    <p id="passwordError" class="error-message" aria-live="polite">Incorrect password. Please try again.</p>
+    <button id="passwordSubmit">Continue</button>
   </div>
 </div>
 
 <!-- Full access overlay (appears in view-only mode) -->
-<div id="fullAccessOverlay" style="display: none;">
+<div id="fullAccessOverlay" style="display: none;" aria-modal="true" role="dialog">
   <div id="fullAccessForm">
-    <h2>Do this for edit nigga</h2>
-    <input type="password" id="fullAccessInput" placeholder="its esay fr :3" autocomplete="off" />
-    <p id="fullAccessError">Wrong code! If you don't know it, go away.</p>
-    <button id="fullAccessSubmit">Press to pass</button>
+    <h2>Enter full access code</h2>
+    <input type="password" id="fullAccessInput" aria-label="Enter full access code" placeholder="Enter full access code" autocomplete="off" />
+    <p id="fullAccessError" class="error-message" aria-live="polite">Wrong code! Please try again.</p>
+    <button id="fullAccessSubmit">Login</button>
   </div>
 </div>
 
@@ -305,51 +418,60 @@
 <div id="mainContent" style="display: none;">
   <header>
     <h1>Note for me and won :3</h1>
-    <nav>
+    <nav aria-label="Main navigation">
+      <input type="file" id="importNotesInput" accept="application/json" aria-label="Import notes" />
+      <button id="exportNotesBtn" aria-label="Export notes" title="Download your notes as a file">Export</button>
+      <button id="importNotesBtn" aria-label="Import notes" title="Upload a notes backup">Import</button>
       <button id="resetNotesBtn" aria-label="Reset to default notes">Reset</button>
+      <button id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     </nav>
   </header>
 
   <main class="container" id="app">
+    <section>
+      <input id="searchNotes" type="search" placeholder="Search notes..." aria-label="Search notes" style="width:100%;max-width:400px;margin-bottom:1.5rem;font-size:1rem;padding:0.5rem;border-radius:0.5rem;border:1px solid #e5e7eb;" />
+    </section>
     <section id="notes" aria-live="polite" aria-relevant="additions removals"></section>
-
     <section id="customizePanel" aria-label="Customize visible notes and sections">
       <h2>Edit</h2>
       <div id="customizeCheckboxes"></div>
     </section>
     <button id="viewOnlyLoginBtn" style="display: none;">Login for full access</button>
+    <div id="viewOnlyInfo" style="display: none; color: var(--color-text-muted); font-size: 1em; margin-top: 1.5em;" aria-live="polite">
+      <span>View-only mode: You can read notes, but editing is disabled.</span>
+    </div>
   </main>
 </div>
 
 <script>
-  // Config
+  // ---- Theme: Dark/Light ----
+  const THEME_KEY = "notesAppTheme";
+  function setTheme(theme) {
+    document.body.classList.toggle("dark", theme === "dark");
+    localStorage.setItem(THEME_KEY, theme);
+    document.getElementById("darkToggle").innerText = theme === "dark" ? "☀️" : "🌙";
+  }
+  function toggleTheme() {
+    const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
+    setTheme(newTheme);
+  }
+  function initTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored) {
+      setTheme(stored);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
+    }
+    document.getElementById("darkToggle").addEventListener("click", toggleTheme);
+  }
+
+  // ---- Auth ----
   const CORRECT_PASSWORD = "11331122";
   const FULL_ACCESS_CODE = "pay gorn";
   const PASSWORD_STORAGE_KEY = "notesAppAuthenticated";
   const FULL_ACCESS_KEY = "notesAppFullAccess";
 
-  // Default notes
-  const defaultNotes = [
-    { id: 'note1', title: 'dream', content: 'My dream is , fly with jet , meet won , merry won , just , no more dream pls' },
-    { id: 'note2', title: 'gools', content: 'meet the evil and kill him , kill ivan zolo , make a game and get money from there' },
-    { id: 'note3', title: 'nih', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note4', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note5', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note6', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note7', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note8', title: 'NIGGA', content: 'WE GOTTA BUY NIGGA' },
-    { id: 'note9', title: 'water', content: '6/11/2025 = 2L - ' },
-  ];
-
-  // App state
-  let notes = JSON.parse(localStorage.getItem('notes')) || defaultNotes.map(n => ({ ...n, visible: true }));
-
-  // Helper to save notes state to localStorage
-  function saveNotes() {
-    localStorage.setItem('notes', JSON.stringify(notes));
-  }
-
-  // Auth state
   function isAuthenticated() {
     return localStorage.getItem(PASSWORD_STORAGE_KEY) === "true";
   }
@@ -363,7 +485,24 @@
     localStorage.setItem(FULL_ACCESS_KEY, "true");
   }
 
-  // Password submit
+  // ---- Notes State ----
+  const defaultNotes = [
+    { id: 'note1', title: 'dream', content: 'i wish i hade someone really understand me like ... idk won i cant type here bcuz anyways u see it :3' },
+    { id: 'note2', title: 'YouTube Link', content: 'https://www.youtube.com/watch?v=LgUnKB2nY-4' },
+    { id: 'note3', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note4', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note5', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note6', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note7', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note8', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note9', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+  ];
+  let notes = JSON.parse(localStorage.getItem('notes')) || defaultNotes.map(n => ({ ...n, visible: true }));
+  function saveNotes() {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }
+
+  // ---- Auth Forms ----
   function handlePasswordSubmit() {
     const passwordInput = document.getElementById('passwordInput');
     const passwordError = document.getElementById('passwordError');
@@ -383,9 +522,10 @@
     document.getElementById('passwordInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') handlePasswordSubmit();
     });
+    document.getElementById('passwordInput').addEventListener('input', function() {
+      document.getElementById('passwordError').style.display = 'none';
+    });
   }
-
-  // Full access code submit
   function handleFullAccessSubmit() {
     const codeInput = document.getElementById('fullAccessInput');
     const codeError = document.getElementById('fullAccessError');
@@ -404,15 +544,17 @@
     document.getElementById('fullAccessInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') handleFullAccessSubmit();
     });
+    document.getElementById('fullAccessInput').addEventListener('input', function() {
+      document.getElementById('fullAccessError').style.display = 'none';
+    });
   }
 
-  // Note Card (editable / readonly)
+  // ---- Notes UI ----
   function createNoteCard(note, readonly = false) {
     const card = document.createElement('article');
     card.className = 'note-card';
     card.setAttribute('data-note-id', note.id);
-
-    // Title section
+    // Title
     let titleEl;
     if (readonly) {
       titleEl = document.createElement('h3');
@@ -433,8 +575,7 @@
         titleEl.innerText = note.title;
       });
     }
-
-    // Content section
+    // Content
     let contentEl;
     if (readonly) {
       contentEl = document.createElement('div');
@@ -451,7 +592,6 @@
         saveNotes();
       });
     }
-
     // Actions
     const header = document.createElement('div');
     header.className = 'note-header';
@@ -474,39 +614,69 @@
       actions.appendChild(delBtn);
       header.appendChild(actions);
     }
-
     card.appendChild(header);
     card.appendChild(contentEl);
-
     return card;
   }
 
-  // Render notes
   function renderNotes() {
     const notesContainer = document.getElementById('notes');
     notesContainer.innerHTML = '';
     const readonly = !hasFullAccess();
+    const searchTerm = (document.getElementById('searchNotes').value || '').toLowerCase();
     notes.forEach(note => {
-      if (note.visible !== false) {
+      if ((note.visible !== false) && 
+          (note.title.toLowerCase().includes(searchTerm) || note.content.toLowerCase().includes(searchTerm))) {
         notesContainer.appendChild(createNoteCard(note, readonly));
       }
     });
   }
 
-  // Customize panel (checkboxes)
+  // ---- DRAGGABLE, EASY CUSTOMIZE PANEL ----
   function updateCustomizePanel() {
     const customizePanel = document.getElementById('customizePanel');
     const container = document.getElementById('customizeCheckboxes');
     container.innerHTML = '';
     if (!hasFullAccess()) {
-      // Hide panel in view-only
       customizePanel.style.display = 'none';
       return;
     }
     customizePanel.style.display = '';
-    notes.forEach(note => {
+    notes.forEach((note, idx) => {
       const label = document.createElement('label');
       label.htmlFor = `toggle-${note.id}`;
+      label.className = 'customize-row';
+      label.draggable = true;
+      label.dataset.idx = idx;
+      // Drag handlers
+      label.addEventListener('dragstart', (e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData('text/plain', idx);
+        label.classList.add('dragging');
+      });
+      label.addEventListener('dragend', () => { label.classList.remove('dragging'); });
+      label.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        label.classList.add('dragover');
+      });
+      label.addEventListener('dragleave', () => { label.classList.remove('dragover'); });
+      label.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const fromIdx = +e.dataTransfer.getData('text/plain');
+        const toIdx = idx;
+        if (fromIdx !== toIdx) {
+          // Move note in array
+          const moved = notes.splice(fromIdx, 1)[0];
+          notes.splice(toIdx, 0, moved);
+          saveNotes();
+          updateCustomizePanel();
+          renderNotes();
+        }
+      });
+      // Drag handle icon
+      const dragIcon = document.createElement('span');
+      dragIcon.className = 'drag-icon';
+      dragIcon.innerHTML = "☰";
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.id = `toggle-${note.id}`;
@@ -517,13 +687,13 @@
         saveNotes();
         renderNotes();
       });
+      label.appendChild(dragIcon);
       label.appendChild(checkbox);
       label.appendChild(document.createTextNode(note.title));
       container.appendChild(label);
     });
   }
 
-  // Reset notes
   function resetNotes() {
     if (confirm('Reset all notes to default? This cannot be undone.')) {
       notes = defaultNotes.map(n => ({ ...n, visible: true }));
@@ -533,61 +703,116 @@
     }
   }
 
-  // Add new note (not shown, but can be added for full features)
-  function addNewNote() {
-    const newId = `note${Date.now()}`;
-    const newNote = {
-      id: newId,
-      title: 'New Note',
-      content: '',
-      visible: true
-    };
-    notes.push(newNote);
-    saveNotes();
-    renderNotes();
-    updateCustomizePanel();
+  // ---- Export/Import Notes ----
+  function exportNotes() {
+    const blob = new Blob([JSON.stringify(notes, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "notes-backup.json";
+    document.body.appendChild(a);
+    a.click();
     setTimeout(() => {
-      const newCard = document.querySelector(`[data-note-id="${newId}"]`);
-      if (newCard) {
-        const title = newCard.querySelector('.note-title');
-        title && title.focus();
-      }
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }, 0);
   }
+  function importNotesFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (Array.isArray(imported) && imported.every(n => n.title && n.content)) {
+          notes = imported.map(n => ({
+            ...n,
+            id: n.id || `note${Math.random().toString(36).slice(2)}`,
+            visible: n.visible !== false
+          }));
+          saveNotes();
+          renderNotes();
+          updateCustomizePanel();
+          alert("Notes imported successfully!");
+        } else {
+          alert("Invalid notes file.");
+        }
+      } catch {
+        alert("Could not parse the notes file.");
+      }
+    };
+    reader.readAsText(file);
+  }
 
-  // Render the entire app depending on access
+  // ---- Render App (controls) ----
   function renderApp() {
-    // Hide overlays
     document.getElementById('passwordOverlay').style.display = 'none';
     document.getElementById('fullAccessOverlay').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
-
-    // Header/buttons
     const resetBtn = document.getElementById('resetNotesBtn');
+    const exportBtn = document.getElementById('exportNotesBtn');
+    const importBtn = document.getElementById('importNotesBtn');
+    const importInput = document.getElementById('importNotesInput');
     const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
-    // Full access = show all; else, hide controls
+    const viewOnlyInfo = document.getElementById('viewOnlyInfo');
     if (hasFullAccess()) {
       resetBtn.style.display = '';
       document.getElementById('customizePanel').style.display = '';
       viewOnlyLoginBtn.style.display = 'none';
+      viewOnlyInfo.style.display = 'none';
       resetBtn.onclick = resetNotes;
+      exportBtn.style.display = '';
+      importBtn.style.display = '';
+      exportBtn.onclick = exportNotes;
+      importBtn.onclick = () => { importInput.click(); };
+      importInput.onchange = (e) => {
+        if (importInput.files.length) {
+          importNotesFromFile(importInput.files[0]);
+        }
+        importInput.value = "";
+      };
     } else {
       resetBtn.style.display = 'none';
       document.getElementById('customizePanel').style.display = 'none';
+      exportBtn.style.display = '';
+      importBtn.style.display = 'none';
       viewOnlyLoginBtn.style.display = '';
+      viewOnlyInfo.style.display = '';
+      exportBtn.onclick = exportNotes;
       viewOnlyLoginBtn.onclick = () => {
         document.getElementById('fullAccessOverlay').style.display = 'flex';
         document.getElementById('fullAccessInput').focus();
       };
     }
-
-    // Render UI
     renderNotes();
     updateCustomizePanel();
   }
 
-  // On load
+  // ---- Accessibility: focus trap for overlays ----
+  function trapFocus(element) {
+    const focusable = element.querySelectorAll("input,button");
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    element.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    trapFocus(document.getElementById('passwordOverlay'));
+    trapFocus(document.getElementById('fullAccessOverlay'));
+    document.getElementById('searchNotes').addEventListener('input', renderNotes);
     if (isAuthenticated()) {
       document.getElementById('passwordOverlay').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
