@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Note for Us</title>
 <style>
-  /* ... (CSS mostly unchanged, but I'll improve error UI, ARIA, and responsive tweaks below) ... */
-
   :root {
     --color-bg: #ffffff;
     --color-text: #374151;
@@ -79,7 +77,7 @@
     align-items: center;
     gap: 0.75rem;
   }
-  nav button, #resetNotesBtn {
+  nav button, #resetNotesBtn, #sortNotesBtn {
     font-family: var(--font-body);
     font-size: 1rem;
     padding: 0.5rem 1rem;
@@ -91,11 +89,11 @@
     transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
     user-select: none;
   }
-  nav button:focus-visible, #resetNotesBtn:focus-visible {
+  nav button:focus-visible, #resetNotesBtn:focus-visible, #sortNotesBtn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
-  nav button:hover, #resetNotesBtn:hover {
+  nav button:hover, #resetNotesBtn:hover, #sortNotesBtn:hover {
     background-color: var(--color-primary);
     color: var(--color-bg);
     transform: scale(1.08);
@@ -132,6 +130,14 @@
     opacity: 0;
     transform: translateY(40px) scale(0.96);
     animation: cardIn 0.5s cubic-bezier(.23,1.02,.53,.97) forwards;
+  }
+  .note-card.pinned {
+    border: 2px solid var(--color-primary);
+    background: #fffbe7;
+    box-shadow: 0 4px 14px rgb(255 205 0 / 0.12);
+  }
+  body.dark .note-card.pinned {
+    background: #3c2f13;
   }
   .note-card:focus-within, .note-card:hover {
     box-shadow: 0 4px 14px rgb(0 0 0 / 0.15);
@@ -179,6 +185,13 @@
     background-color: var(--color-primary);
     color: var(--color-bg);
     transform: scale(1.12) rotate(-8deg);
+  }
+  .note-actions .pin-btn {
+    font-size: 1.1em;
+    color: #d97706;
+  }
+  .note-card.pinned .note-actions .pin-btn {
+    color: #f59e42;
   }
   .note-content {
     flex: 1;
@@ -366,17 +379,15 @@
     background: var(--color-primary-hover);
     transform: scale(1.08) rotate(-3deg);
   }
-  /* Accessibility: better focus ring for all buttons */
   button:focus-visible {
     outline: 2px solid var(--color-primary-hover);
     outline-offset: 2px;
   }
-  /* Responsive improvements */
   @media (max-width: 480px) {
     header h1 {
       font-size: 1.5rem;
     }
-    nav button, #resetNotesBtn {
+    nav button, #resetNotesBtn, #sortNotesBtn {
       padding: 0.4rem 0.75rem;
       font-size: 0.9rem;
     }
@@ -386,10 +397,53 @@
     #viewOnlyLoginBtn { width: 100%; }
     .customize-row { font-size: 0.97em; padding: 0.44em 0.3em; }
   }
-  /* Hide file input visually but keep it accessible */
-  #importNotesInput {
+  #newNoteBtn {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-bg);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
+  }
+  #newNoteBtn:hover {
+    background-color: var(--color-primary-hover);
+    color: var(--color-bg);
+    transform: scale(1.08);
+  }
+  #sortNotesBtn {
+    margin-left: 0.6rem;
+  }
+  .sort-menu {
     position: absolute;
-    left: -9999px;
+    background: var(--card-bg);
+    border-radius: 0.4em;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 0.07);
+    border: 1px solid #e5e7eb;
+    z-index: 1000;
+    min-width: 150px;
+    padding: 0.6em 0;
+    right: 0;
+    top: 2.9em;
+    display: none;
+  }
+  .sort-menu button {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+    padding: 0.4em 1em;
+    color: var(--color-text);
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .sort-menu button:focus, .sort-menu button:hover {
+    background: #f3f4f6;
+    color: var(--color-primary);
   }
 </style>
 </head>
@@ -403,7 +457,6 @@
     <button id="passwordSubmit">Continue</button>
   </div>
 </div>
-
 <!-- Full access overlay (appears in view-only mode) -->
 <div id="fullAccessOverlay" style="display: none;" aria-modal="true" role="dialog">
   <div id="fullAccessForm">
@@ -413,22 +466,24 @@
     <button id="fullAccessSubmit">Login</button>
   </div>
 </div>
-
 <!-- Main content (hidden until password is entered) -->
 <div id="mainContent" style="display: none;">
   <header>
     <h1>Note for me and won :3</h1>
-    <nav aria-label="Main navigation">
-      <input type="file" id="importNotesInput" accept="application/json" aria-label="Import notes" />
-      <button id="exportNotesBtn" aria-label="Export notes" title="Download your notes as a file">Export</button>
-      <button id="importNotesBtn" aria-label="Import notes" title="Upload a notes backup">Import</button>
+    <nav aria-label="Main navigation" style="position: relative;">
       <button id="resetNotesBtn" aria-label="Reset to default notes">Reset</button>
+      <button id="sortNotesBtn" aria-label="Sort notes" title="Sort notes">Sort</button>
+      <div id="sortMenu" class="sort-menu" aria-label="Sort menu">
+        <button data-sort="pinned">Pinned first</button>
+        <button data-sort="title">By title</button>
+        <button data-sort="newest">Newest first</button>
+      </div>
       <button id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     </nav>
   </header>
-
   <main class="container" id="app">
     <section>
+      <button id="newNoteBtn" style="display:none;" aria-label="Add new note">+ New Note</button>
       <input id="searchNotes" type="search" placeholder="Search notes..." aria-label="Search notes" style="width:100%;max-width:400px;margin-bottom:1.5rem;font-size:1rem;padding:0.5rem;border-radius:0.5rem;border:1px solid #e5e7eb;" />
     </section>
     <section id="notes" aria-live="polite" aria-relevant="additions removals"></section>
@@ -442,7 +497,6 @@
     </div>
   </main>
 </div>
-
 <script>
   // ---- Theme: Dark/Light ----
   const THEME_KEY = "notesAppTheme";
@@ -471,7 +525,6 @@
   const FULL_ACCESS_CODE = "pay gorn";
   const PASSWORD_STORAGE_KEY = "notesAppAuthenticated";
   const FULL_ACCESS_KEY = "notesAppFullAccess";
-
   function isAuthenticated() {
     return localStorage.getItem(PASSWORD_STORAGE_KEY) === "true";
   }
@@ -484,20 +537,21 @@
   function setFullAccess() {
     localStorage.setItem(FULL_ACCESS_KEY, "true");
   }
-
   // ---- Notes State ----
   const defaultNotes = [
-    { id: 'note1', title: 'dream', content: 'i wish i hade someone really understand me like ... idk won i cant type here bcuz anyways u see it :3' },
-    { id: 'note2', title: 'YouTube Link', content: 'https://www.youtube.com/watch?v=LgUnKB2nY-4' },
-    { id: 'note3', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note4', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note5', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note6', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note7', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note8', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
-    { id: 'note9', title: 'Reminder', content: 'WE GOTTA BUY IT!' },
+    { id: 'note1', title: 'dream', content: 'i wish i hade someone really understand me like ... idk won i cant type here bcuz anyways u see it :3', pinned: false, created: Date.now() },
+    { id: 'note2', title: 'YouTube Link', content: 'https://www.youtube.com/watch?v=LgUnKB2nY-4', pinned: false, created: Date.now() },
+    { id: 'note3', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note4', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note5', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note6', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note7', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note8', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
+    { id: 'note9', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
   ];
   let notes = JSON.parse(localStorage.getItem('notes')) || defaultNotes.map(n => ({ ...n, visible: true }));
+  let selectedNoteId = null; // for keyboard shortcuts
+
   function saveNotes() {
     localStorage.setItem('notes', JSON.stringify(notes));
   }
@@ -550,10 +604,25 @@
   }
 
   // ---- Notes UI ----
+  let sortType = localStorage.getItem("notesSortType") || "pinned";
+  function sortNotes(a, b) {
+    if (sortType === "pinned") {
+      if ((a.pinned || false) !== (b.pinned || false)) return b.pinned - a.pinned;
+      return b.created - a.created;
+    }
+    if (sortType === "title") {
+      return (a.title || "").localeCompare(b.title || "");
+    }
+    // newest
+    return b.created - a.created;
+  }
   function createNoteCard(note, readonly = false) {
     const card = document.createElement('article');
     card.className = 'note-card';
+    if (note.pinned) card.classList.add('pinned');
     card.setAttribute('data-note-id', note.id);
+    if (note.id === selectedNoteId) card.tabIndex = 0; // focusable for keyboard
+
     // Title
     let titleEl;
     if (readonly) {
@@ -600,6 +669,22 @@
     if (!readonly) {
       const actions = document.createElement('div');
       actions.className = 'note-actions';
+
+      // Pin button
+      const pinBtn = document.createElement('button');
+      pinBtn.setAttribute('aria-label', note.pinned ? "Unpin note" : "Pin note");
+      pinBtn.className = 'pin-btn';
+      pinBtn.innerHTML = note.pinned ? "📌" : "📍";
+      pinBtn.title = note.pinned ? "Unpin note" : "Pin note";
+      pinBtn.addEventListener('click', (e) => {
+        note.pinned = !note.pinned;
+        saveNotes();
+        renderNotes();
+        updateCustomizePanel();
+      });
+      actions.appendChild(pinBtn);
+
+      // Delete button
       const delBtn = document.createElement('button');
       delBtn.setAttribute('aria-label', 'Delete note');
       delBtn.innerHTML = '&times;';
@@ -612,10 +697,23 @@
         }
       });
       actions.appendChild(delBtn);
+
       header.appendChild(actions);
     }
     card.appendChild(header);
     card.appendChild(contentEl);
+
+    // For keyboard shortcuts: allow selecting by clicking
+    card.addEventListener('click', function() {
+      if (!readonly) {
+        selectedNoteId = note.id;
+        renderNotes();
+      }
+    });
+    card.addEventListener('focus', function() {
+      selectedNoteId = note.id;
+    });
+
     return card;
   }
 
@@ -624,12 +722,14 @@
     notesContainer.innerHTML = '';
     const readonly = !hasFullAccess();
     const searchTerm = (document.getElementById('searchNotes').value || '').toLowerCase();
-    notes.forEach(note => {
-      if ((note.visible !== false) && 
-          (note.title.toLowerCase().includes(searchTerm) || note.content.toLowerCase().includes(searchTerm))) {
+    notes
+      .filter(note => (note.visible !== false) && (note.title.toLowerCase().includes(searchTerm) || note.content.toLowerCase().includes(searchTerm)))
+      .sort(sortNotes)
+      .forEach(note => {
         notesContainer.appendChild(createNoteCard(note, readonly));
-      }
-    });
+      });
+    // Show/hide newNoteBtn depending on mode
+    document.getElementById("newNoteBtn").style.display = hasFullAccess() ? "" : "none";
   }
 
   // ---- DRAGGABLE, EASY CUSTOMIZE PANEL ----
@@ -703,43 +803,98 @@
     }
   }
 
-  // ---- Export/Import Notes ----
-  function exportNotes() {
-    const blob = new Blob([JSON.stringify(notes, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = "notes-backup.json";
-    document.body.appendChild(a);
-    a.click();
+  // ---- New Note ----
+  function addNewNote() {
+    const id = "note" + Math.random().toString(36).slice(2, 10);
+    const note = {
+      id,
+      title: "Untitled",
+      content: "",
+      visible: true,
+      pinned: false,
+      created: Date.now()
+    };
+    notes.unshift(note);
+    saveNotes();
+    selectedNoteId = id;
+    renderNotes();
+    updateCustomizePanel();
+    // Focus the new note title
     setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
+      const card = document.querySelector(`.note-card[data-note-id="${id}"] .note-title`);
+      if (card) card.focus();
+    }, 100);
   }
-  function importNotesFromFile(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (Array.isArray(imported) && imported.every(n => n.title && n.content)) {
-          notes = imported.map(n => ({
-            ...n,
-            id: n.id || `note${Math.random().toString(36).slice(2)}`,
-            visible: n.visible !== false
-          }));
+
+  // ---- Sorting Menu ----
+  function setupSortMenu() {
+    const sortBtn = document.getElementById("sortNotesBtn");
+    const sortMenu = document.getElementById("sortMenu");
+    sortBtn.addEventListener("click", function(e) {
+      sortMenu.style.display = sortMenu.style.display === "block" ? "none" : "block";
+      sortMenu.focus();
+    });
+    sortMenu.querySelectorAll("button").forEach(btn=>{
+      btn.addEventListener("click", function() {
+        sortType = btn.dataset.sort;
+        localStorage.setItem("notesSortType", sortType);
+        sortMenu.style.display = "none";
+        renderNotes();
+      });
+    });
+    // Close menu when clicking outside
+    document.addEventListener("mousedown", function(e){
+      if (!sortMenu.contains(e.target) && e.target !== sortBtn) {
+        sortMenu.style.display = "none";
+      }
+    });
+  }
+
+  // ---- Keyboard Shortcuts ----
+  function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+      if (!hasFullAccess()) return;
+      if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA" || document.activeElement.isContentEditable) return;
+      // n: new note
+      if (e.key === "n" && !e.ctrlKey && !e.altKey) {
+        addNewNote();
+        e.preventDefault();
+      }
+      // /: focus search
+      if (e.key === "/" && !e.ctrlKey && !e.altKey) {
+        document.getElementById("searchNotes").focus();
+        e.preventDefault();
+      }
+      // p: pin/unpin selected note
+      if (e.key === "p" && selectedNoteId) {
+        const note = notes.find(n => n.id === selectedNoteId);
+        if (note) {
+          note.pinned = !note.pinned;
           saveNotes();
           renderNotes();
           updateCustomizePanel();
-          alert("Notes imported successfully!");
-        } else {
-          alert("Invalid notes file.");
         }
-      } catch {
-        alert("Could not parse the notes file.");
+        e.preventDefault();
       }
-    };
-    reader.readAsText(file);
+      // Arrow up/down to move selection
+      if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+        const visibleNotes = notes.filter(n => n.visible !== false).sort(sortNotes);
+        let idx = visibleNotes.findIndex(n => n.id === selectedNoteId);
+        if (idx >= 0) {
+          if (e.key === "ArrowUp") idx = Math.max(0, idx-1);
+          else idx = Math.min(visibleNotes.length-1, idx+1);
+        } else {
+          idx = 0;
+        }
+        selectedNoteId = visibleNotes[idx]?.id;
+        renderNotes();
+        setTimeout(() => {
+          const card = document.querySelector(`.note-card[data-note-id="${selectedNoteId}"]`);
+          if (card) card.focus();
+        }, 50);
+        e.preventDefault();
+      }
+    });
   }
 
   // ---- Render App (controls) ----
@@ -748,9 +903,6 @@
     document.getElementById('fullAccessOverlay').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     const resetBtn = document.getElementById('resetNotesBtn');
-    const exportBtn = document.getElementById('exportNotesBtn');
-    const importBtn = document.getElementById('importNotesBtn');
-    const importInput = document.getElementById('importNotesInput');
     const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
     const viewOnlyInfo = document.getElementById('viewOnlyInfo');
     if (hasFullAccess()) {
@@ -759,24 +911,14 @@
       viewOnlyLoginBtn.style.display = 'none';
       viewOnlyInfo.style.display = 'none';
       resetBtn.onclick = resetNotes;
-      exportBtn.style.display = '';
-      importBtn.style.display = '';
-      exportBtn.onclick = exportNotes;
-      importBtn.onclick = () => { importInput.click(); };
-      importInput.onchange = (e) => {
-        if (importInput.files.length) {
-          importNotesFromFile(importInput.files[0]);
-        }
-        importInput.value = "";
-      };
+      document.getElementById("newNoteBtn").style.display = "";
+      document.getElementById("newNoteBtn").onclick = addNewNote;
     } else {
       resetBtn.style.display = 'none';
       document.getElementById('customizePanel').style.display = 'none';
-      exportBtn.style.display = '';
-      importBtn.style.display = 'none';
       viewOnlyLoginBtn.style.display = '';
       viewOnlyInfo.style.display = '';
-      exportBtn.onclick = exportNotes;
+      document.getElementById("newNoteBtn").style.display = "none";
       viewOnlyLoginBtn.onclick = () => {
         document.getElementById('fullAccessOverlay').style.display = 'flex';
         document.getElementById('fullAccessInput').focus();
@@ -813,6 +955,8 @@
     trapFocus(document.getElementById('passwordOverlay'));
     trapFocus(document.getElementById('fullAccessOverlay'));
     document.getElementById('searchNotes').addEventListener('input', renderNotes);
+    setupSortMenu();
+    setupKeyboardShortcuts();
     if (isAuthenticated()) {
       document.getElementById('passwordOverlay').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
