@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Note for Us</title>
+<title>Note for Us - Window Edit Mode</title>
 <style>
   :root {
     --color-bg: #ffffff;
@@ -76,8 +76,9 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    position: relative;
   }
-  nav button, #resetNotesBtn, #sortNotesBtn {
+  nav button, #resetNotesBtn, #sortNotesBtn, #moveBtn {
     font-family: var(--font-body);
     font-size: 1rem;
     padding: 0.5rem 1rem;
@@ -89,11 +90,11 @@
     transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
     user-select: none;
   }
-  nav button:focus-visible, #resetNotesBtn:focus-visible, #sortNotesBtn:focus-visible {
+  nav button:focus-visible, #resetNotesBtn:focus-visible, #sortNotesBtn:focus-visible, #moveBtn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
-  nav button:hover, #resetNotesBtn:hover, #sortNotesBtn:hover {
+  nav button:hover, #resetNotesBtn:hover, #sortNotesBtn:hover, #moveBtn:hover {
     background-color: var(--color-primary);
     color: var(--color-bg);
     transform: scale(1.08);
@@ -113,6 +114,21 @@
     background: none;
     transform: scale(1.2) rotate(-12deg);
   }
+  #notesView {
+    display: block;
+  }
+  #videoDrawingView {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  #videoDrawingView.active {
+    display: flex;
+  }
+
+  /* Notes grid */
   #notes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -130,6 +146,7 @@
     opacity: 0;
     transform: translateY(40px) scale(0.96);
     animation: cardIn 0.5s cubic-bezier(.23,1.02,.53,.97) forwards;
+    cursor: pointer;
   }
   .note-card.pinned {
     border: 2px solid var(--color-primary);
@@ -193,23 +210,15 @@
   .note-card.pinned .note-actions .pin-btn {
     color: #f59e42;
   }
-  .note-content {
-    flex: 1;
-    border: none;
-    resize: none;
-    background: transparent;
+  .note-content-preview {
+    white-space: pre-wrap;
     color: var(--color-text);
     font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.5;
-    min-height: 80px;
-    outline-offset: 2px;
-    transition: box-shadow var(--transition-speed);
-    border-radius: 0.5rem;
-    padding: 0;
-  }
-  .note-content:focus {
-    outline: 2px solid var(--color-primary);
+    min-height: 3.5rem;
+    overflow: hidden;
+    user-select: none;
   }
   #customizePanel {
     margin-top: 2.5rem;
@@ -387,7 +396,7 @@
     header h1 {
       font-size: 1.5rem;
     }
-    nav button, #resetNotesBtn, #sortNotesBtn {
+    nav button, #resetNotesBtn, #sortNotesBtn, #moveBtn {
       padding: 0.4rem 0.75rem;
       font-size: 0.9rem;
     }
@@ -397,53 +406,150 @@
     #viewOnlyLoginBtn { width: 100%; }
     .customize-row { font-size: 0.97em; padding: 0.44em 0.3em; }
   }
-  #newNoteBtn {
+
+  /* Modal Window for Note Editing */
+  #noteModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  #noteModalOverlay.active {
+    display: flex;
+  }
+  #noteModal {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    position: relative;
+  }
+  #noteModal header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  #noteModal header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--color-primary);
+  }
+  #noteModal header button.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--color-primary);
+    padding: 0;
+    line-height: 1;
+    transition: color var(--transition-speed);
+  }
+  #noteModal header button.close-btn:hover,
+  #noteModal header button.close-btn:focus-visible {
+    color: var(--color-primary-hover);
+  }
+  #noteModal input.title-input {
+    font-family: var(--font-heading);
+    font-size: 1.45rem;
+    font-weight: 600;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    padding: 0.3rem 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--color-text);
+    background: transparent;
+    transition: border-color var(--transition-speed), background-color var(--transition-speed), color var(--transition-speed);
+  }
+  #noteModal input.title-input:focus {
+    outline: none;
+    border-color: var(--color-primary-hover);
+    background-color: var(--card-bg);
+    color: var(--color-text);
+  }
+  #noteModal textarea.content-textarea {
+    flex: 1;
+    margin-top: 1rem;
     font-family: var(--font-body);
     font-size: 1rem;
-    padding: 0.5rem 1rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    resize: vertical;
+    min-height: 220px;
+    padding: 0.75rem 1rem;
+    transition: border-color var(--transition-speed);
+  }
+  #noteModal textarea.content-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary-hover);
+  }
+  #noteModal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    gap: 0.75rem;
+  }
+  #noteModal button.action-btn {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--border-radius);
     border: 2px solid var(--color-primary);
     background: var(--color-primary);
     color: var(--color-bg);
-    border-radius: var(--border-radius);
     cursor: pointer;
-    margin-bottom: 1.5rem;
-    transition: background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
+    user-select: none;
+    transition: background-color var(--transition-speed), transform 0.2s ease;
   }
-  #newNoteBtn:hover {
+  #noteModal button.action-btn:hover {
     background-color: var(--color-primary-hover);
-    color: var(--color-bg);
     transform: scale(1.08);
   }
-  #sortNotesBtn {
-    margin-left: 0.6rem;
+  #noteModal button.pin-toggle {
+    background-color: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
   }
-  .sort-menu {
-    position: absolute;
-    background: var(--card-bg);
-    border-radius: 0.4em;
-    box-shadow: 0 2px 12px rgb(0 0 0 / 0.07);
-    border: 1px solid #e5e7eb;
-    z-index: 1000;
-    min-width: 150px;
-    padding: 0.6em 0;
-    right: 0;
-    top: 2.9em;
+  #noteModal button.pin-toggle.pinned {
+    background-color: #fffbe7;
+    color: #d97706;
+    border-color: #d97706;
+  }
+  body.dark #noteModal button.pin-toggle.pinned {
+    background-color: #3c2f13;
+    color: #f59e42;
+    border-color: #f59e42;
+  }
+  /* Accessibility: hiding scrollbars on overlay */
+  #noteModalOverlay::-webkit-scrollbar {
     display: none;
   }
-  .sort-menu button {
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    font-size: 1rem;
-    padding: 0.4em 1em;
-    color: var(--color-text);
-    cursor: pointer;
-    border-radius: 0;
-  }
-  .sort-menu button:focus, .sort-menu button:hover {
-    background: #f3f4f6;
-    color: var(--color-primary);
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    #noteModal {
+      max-width: 95vw;
+      padding: 1rem;
+    }
+    #noteModal textarea.content-textarea {
+      min-height: 160px;
+    }
   }
 </style>
 </head>
@@ -466,13 +572,14 @@
     <button id="fullAccessSubmit">Login</button>
   </div>
 </div>
-<!-- Main content (hidden until password is entered) -->
-<div id="mainContent" style="display: none;">
+<!-- Main Content -->
+<div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
   <header>
     <h1>Note for me and won :3</h1>
     <nav aria-label="Main navigation" style="position: relative;">
       <button id="resetNotesBtn" aria-label="Reset to default notes">Reset</button>
       <button id="sortNotesBtn" aria-label="Sort notes" title="Sort notes">Sort</button>
+      <button id="moveBtn" aria-label="Open drawing view">Move</button>
       <div id="sortMenu" class="sort-menu" aria-label="Sort menu">
         <button data-sort="pinned">Pinned first</button>
         <button data-sort="title">By title</button>
@@ -481,7 +588,9 @@
       <button id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     </nav>
   </header>
-  <main class="container" id="app">
+
+  <!-- Notes View -->
+  <main class="container" id="notesView">
     <section>
       <button id="newNoteBtn" style="display:none;" aria-label="Add new note">+ New Note</button>
       <input id="searchNotes" type="search" placeholder="Search notes..." aria-label="Search notes" style="width:100%;max-width:400px;margin-bottom:1.5rem;font-size:1rem;padding:0.5rem;border-radius:0.5rem;border:1px solid #e5e7eb;" />
@@ -496,14 +605,63 @@
       <span>View-only mode: You can read notes, but editing is disabled.</span>
     </div>
   </main>
+
+  <!-- Drawing View -->
+  <section id="videoDrawingView" aria-label="Drawing canvas panel">
+    <header>
+      <h2>Drawing Canvas</h2>
+      <button id="closeVideoDrawingBtn" aria-label="Back to notes">Back</button>
+    </header>
+    <div id="drawingControls" aria-label="Drawing controls" style="padding: 0.5rem 1rem;">
+      <label for="colorPicker" style="margin-right:0.5rem;">Color:</label>
+      <input type="color" id="colorPicker" value="#facc15" title="Pick drawing color" />
+      <label for="lineWidthRange" style="margin-left:1rem; margin-right:0.5rem;">Line width:</label>
+      <select id="lineWidthRange" title="Select line width">
+        <option value="2">Thin</option>
+        <option value="4" selected>Medium</option>
+        <option value="8">Thick</option>
+        <option value="12">Extra Thick</option>
+      </select>
+      <button id="pencilBtn" title="Pencil tool" aria-label="Pencil tool" class="active" style="margin-left:1rem;">✏️</button>
+      <button id="rectangleBtn" title="Draw rectangle" aria-label="Rectangle tool">🟦</button>
+      <button id="circleBtn" title="Draw circle" aria-label="Circle tool">⚪</button>
+      <button id="eraserBtn" title="Eraser tool" aria-label="Eraser tool">🧽</button>
+      <button id="undoBtn" title="Undo last action" aria-label="Undo last action" style="margin-left:1rem;">↩️</button>
+      <button id="redoBtn" title="Redo last undone action" aria-label="Redo last action">↪️</button>
+      <button id="clearCanvasBtn" title="Clear drawing" style="margin-left:1rem;">Clear</button>
+      <button id="saveCanvasBtn" title="Save drawing as PNG" style="margin-left:1rem;">Save</button>
+    </div>
+    <canvas id="drawingCanvas" role="img" aria-label="Drawing canvas" tabindex="0" style="flex-grow:1; width:100%; height:100%; border-top: 1px solid var(--color-text-muted);"></canvas>
+  </section>
 </div>
+
+<!-- Modal for editing notes-->
+<div id="noteModalOverlay" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
+  <div id="noteModal" tabindex="-1">
+    <header>
+      <h2 id="noteModalTitle">Edit Note</h2>
+      <button class="close-btn" aria-label="Close note window">&times;</button>
+    </header>
+    <input type="text" id="modalNoteTitle" class="title-input" aria-label="Edit note title" autocomplete="off" />
+    <textarea id="modalNoteContent" class="content-textarea" aria-label="Edit note content"></textarea>
+    <div class="modal-actions">
+      <button id="modalPinToggle" class="pin-toggle" aria-pressed="false" title="Pin or unpin note">📍 Pin</button>
+      <button id="modalDeleteBtn" class="action-btn" title="Delete note">Delete</button>
+      <button id="modalCloseBtn" class="action-btn">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ---- Theme: Dark/Light ----
   const THEME_KEY = "notesAppTheme";
   function setTheme(theme) {
     document.body.classList.toggle("dark", theme === "dark");
     localStorage.setItem(THEME_KEY, theme);
-    document.getElementById("darkToggle").innerText = theme === "dark" ? "☀️" : "🌙";
+    const darkToggle = document.getElementById("darkToggle");
+    if(darkToggle) {
+      darkToggle.innerText = theme === "dark" ? "☀️" : "🌙";
+    }
   }
   function toggleTheme() {
     const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
@@ -517,7 +675,8 @@
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setTheme(prefersDark ? "dark" : "light");
     }
-    document.getElementById("darkToggle").addEventListener("click", toggleTheme);
+    const darkToggle = document.getElementById("darkToggle");
+    if(darkToggle) darkToggle.addEventListener("click", toggleTheme);
   }
 
   // ---- Auth ----
@@ -563,7 +722,7 @@
     if (passwordInput.value === CORRECT_PASSWORD) {
       setAuthenticated();
       document.getElementById('passwordOverlay').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'flex';
       renderApp();
     } else {
       passwordError.style.display = 'block';
@@ -616,52 +775,25 @@
     // newest
     return b.created - a.created;
   }
+  // Create note card now without inline editing
   function createNoteCard(note, readonly = false) {
     const card = document.createElement('article');
     card.className = 'note-card';
     if (note.pinned) card.classList.add('pinned');
     card.setAttribute('data-note-id', note.id);
-    if (note.id === selectedNoteId) card.tabIndex = 0; // focusable for keyboard
+    card.tabIndex = 0; // focusable for keyboard
 
-    // Title
-    let titleEl;
-    if (readonly) {
-      titleEl = document.createElement('h3');
-      titleEl.className = 'note-title';
-      titleEl.innerText = note.title;
-    } else {
-      titleEl = document.createElement('h3');
-      titleEl.className = 'note-title';
-      titleEl.contentEditable = true;
-      titleEl.setAttribute('aria-label', 'Edit note title');
-      titleEl.innerText = note.title;
-      titleEl.addEventListener('input', () => {
-        note.title = titleEl.innerText.trim() || 'Untitled';
-        saveNotes();
-        updateCustomizePanel();
-      });
-      titleEl.addEventListener('blur', () => {
-        titleEl.innerText = note.title;
-      });
-    }
-    // Content
-    let contentEl;
-    if (readonly) {
-      contentEl = document.createElement('div');
-      contentEl.className = 'note-content';
-      contentEl.innerText = note.content;
-      contentEl.style.whiteSpace = 'pre-wrap';
-    } else {
-      contentEl = document.createElement('textarea');
-      contentEl.className = 'note-content';
-      contentEl.setAttribute('aria-label', 'Edit note content');
-      contentEl.value = note.content;
-      contentEl.addEventListener('input', () => {
-        note.content = contentEl.value;
-        saveNotes();
-      });
-    }
-    // Actions
+    // Title preview
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'note-title';
+    titleEl.innerText = note.title || 'Untitled';
+
+    // Content preview
+    const contentEl = document.createElement('div');
+    contentEl.className = 'note-content-preview';
+    contentEl.innerText = note.content || '';
+
+    // Header container for title and actions
     const header = document.createElement('div');
     header.className = 'note-header';
     header.appendChild(titleEl);
@@ -677,6 +809,7 @@
       pinBtn.innerHTML = note.pinned ? "📌" : "📍";
       pinBtn.title = note.pinned ? "Unpin note" : "Pin note";
       pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent card click
         note.pinned = !note.pinned;
         saveNotes();
         renderNotes();
@@ -688,30 +821,38 @@
       const delBtn = document.createElement('button');
       delBtn.setAttribute('aria-label', 'Delete note');
       delBtn.innerHTML = '&times;';
-      delBtn.addEventListener('click', () => {
+      delBtn.title = "Delete note";
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent card click
         if (confirm(`Delete note "${note.title}"?`)) {
           notes = notes.filter(n => n.id !== note.id);
           saveNotes();
           renderNotes();
           updateCustomizePanel();
+          closeNoteModal(); // Close modal if open for this note
         }
       });
       actions.appendChild(delBtn);
 
       header.appendChild(actions);
     }
+
     card.appendChild(header);
     card.appendChild(contentEl);
 
-    // For keyboard shortcuts: allow selecting by clicking
-    card.addEventListener('click', function() {
+    // Open note modal on card click
+    card.addEventListener('click', () => {
       if (!readonly) {
-        selectedNoteId = note.id;
-        renderNotes();
+        openNoteModal(note.id);
       }
     });
-    card.addEventListener('focus', function() {
-      selectedNoteId = note.id;
+    card.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!readonly) {
+          openNoteModal(note.id);
+        }
+      }
     });
 
     return card;
@@ -819,11 +960,7 @@
     selectedNoteId = id;
     renderNotes();
     updateCustomizePanel();
-    // Focus the new note title
-    setTimeout(() => {
-      const card = document.querySelector(`.note-card[data-note-id="${id}"] .note-title`);
-      if (card) card.focus();
-    }, 100);
+    openNoteModal(id);
   }
 
   // ---- Sorting Menu ----
@@ -894,14 +1031,501 @@
         }, 50);
         e.preventDefault();
       }
+      // Escape closes modal if open
+      if (e.key === "Escape") {
+        if (isNoteModalOpen()) {
+          closeNoteModal();
+          e.preventDefault();
+        }
+      }
     });
   }
 
-  // ---- Render App (controls) ----
+  // ---- Note Modal Logic ----
+  const modalOverlay = document.getElementById('noteModalOverlay');
+  const modal = document.getElementById('noteModal');
+  const modalTitleInput = document.getElementById('modalNoteTitle');
+  const modalContentTextarea = document.getElementById('modalNoteContent');
+  const modalPinToggle = document.getElementById('modalPinToggle');
+  const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const modalCloseIconBtn = modal.querySelector('header button.close-btn');
+
+  let modalNoteId = null;
+
+  function isNoteModalOpen() {
+    return modalOverlay.classList.contains('active');
+  }
+  function openNoteModal(id) {
+    modalNoteId = id;
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    modalTitleInput.value = note.title || 'Untitled';
+    modalContentTextarea.value = note.content || '';
+    updatePinToggle(note.pinned);
+    modalPinToggle.setAttribute('aria-pressed', note.pinned ? 'true' : 'false');
+    modalOverlay.classList.add('active');
+    modalTitleInput.focus();
+    disablePageScroll(true);
+    trapFocus(modal);
+  }
+  function closeNoteModal() {
+    modalOverlay.classList.remove('active');
+    modalNoteId = null;
+    disablePageScroll(false);
+    document.activeElement.blur();
+  }
+  function updatePinToggle(pinned) {
+    if(pinned) {
+      modalPinToggle.classList.add('pinned');
+      modalPinToggle.innerText = '📌 Unpin';
+      modalPinToggle.setAttribute('aria-pressed', 'true');
+      modalPinToggle.title = 'Unpin note';
+    } else {
+      modalPinToggle.classList.remove('pinned');
+      modalPinToggle.innerText = '📍 Pin';
+      modalPinToggle.setAttribute('aria-pressed', 'false');
+      modalPinToggle.title = 'Pin note';
+    }
+  }
+
+  modalTitleInput.addEventListener('input', () => {
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    note.title = modalTitleInput.value.trim() || 'Untitled';
+    saveNotes();
+    renderNotes();
+    updateCustomizePanel();
+  });
+  modalContentTextarea.addEventListener('input', () => {
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    note.content = modalContentTextarea.value;
+    saveNotes();
+    renderNotes();
+    updateCustomizePanel();
+  });
+  modalPinToggle.addEventListener('click', () => {
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    note.pinned = !note.pinned;
+    updatePinToggle(note.pinned);
+    saveNotes();
+    renderNotes();
+    updateCustomizePanel();
+  });
+  modalDeleteBtn.addEventListener('click', () => {
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    if (confirm(`Delete note "${note.title}"?`)) {
+      notes = notes.filter(n => n.id !== modalNoteId);
+      saveNotes();
+      renderNotes();
+      updateCustomizePanel();
+      closeNoteModal();
+    }
+  });
+  modalCloseBtn.addEventListener('click', closeNoteModal);
+  modalCloseIconBtn.addEventListener('click', closeNoteModal);
+
+  // Close modal on overlay click (but not when clicking modal content)
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      closeNoteModal();
+    }
+  });
+
+  // Trap focus inside modal
+  function trapFocus(element) {
+    const focusableSelectors = [
+      'a[href]:not([tabindex="-1"])',
+      'button:not([disabled]):not([tabindex="-1"])',
+      'textarea:not([disabled]):not([tabindex="-1"])',
+      'input[type="text"]:not([disabled]):not([tabindex="-1"])',
+      'input[type="password"]:not([disabled]):not([tabindex="-1"])',
+      '[tabindex]:not([tabindex="-1"])'
+    ];
+    const focusable = element.querySelectorAll(focusableSelectors.join(','));
+    if(focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    element.addEventListener('keydown', function handler(e) {
+      if(e.key === 'Tab') {
+        if(e.shiftKey) {
+          if(document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if(document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    });
+  }
+
+  // Disable scroll of page behind modal
+  function disablePageScroll(disable) {
+    if(disable) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  // ---- Drawing Canvas Logic ----
+  (function(){
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let startX = 0;
+    let startY = 0;
+    let currentTool = 'pencil'; // pencil, rectangle, circle, eraser
+    let actions = [];
+    let redoStack = [];
+    let previewingShape = null;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 4;
+
+    // Resize canvas and preserve drawing content
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+
+      // Save current canvas content
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+
+      // Resize canvas to new size
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      // Redraw saved content
+      ctx.drawImage(tempCanvas, 0, 0);
+
+      // Redraw vector actions to keep state consistent
+      redrawCanvas();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getXY(e) {
+      if (e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        return [touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top];
+      } else {
+        return [e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top];
+      }
+    }
+
+    function saveAction(action) {
+      actions.push(action);
+      redoStack = [];
+    }
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      actions.forEach(act => drawAction(ctx, act));
+    }
+    function drawAction(ctx, action) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = action.color || '#facc15';
+      ctx.lineWidth = action.lineWidth || 4;
+
+      if(action.type === 'line'){
+        ctx.beginPath();
+        ctx.moveTo(action.startX, action.startY);
+        ctx.lineTo(action.endX, action.endY);
+        ctx.stroke();
+      } else if(action.type === 'rectangle'){
+        ctx.strokeRect(action.x, action.y, action.width, action.height);
+      } else if(action.type === 'circle'){
+        ctx.beginPath();
+        ctx.arc(action.x, action.y, action.radius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if(action.type === 'eraser'){
+        // For eraser, clear the rectangle area on redraw
+        ctx.clearRect(action.x, action.y, action.width, action.height);
+      }
+      ctx.restore();
+    }
+
+    function startDrawing(e) {
+      drawing = true;
+      [lastX, lastY] = getXY(e);
+      [startX, startY] = [lastX, lastY];
+      if(currentTool === 'pencil' || currentTool === 'eraser'){
+        if(currentTool === 'eraser'){
+          eraseAt(lastX, lastY);
+        } else {
+          saveAction({
+            type: 'line',
+            startX: lastX,
+            startY: lastY,
+            endX: lastX,
+            endY: lastY,
+            color: ctx.strokeStyle,
+            lineWidth: ctx.lineWidth,
+          });
+        }
+      }
+      e.preventDefault();
+    }
+    function stopDrawing(e) {
+      if(!drawing) return;
+      drawing = false;
+      if(currentTool === 'rectangle'){
+        const [x, y] = getXY(e);
+        const rect = createRect(startX, startY, x, y);
+        saveAction({
+          type: 'rectangle',
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+          color: ctx.strokeStyle,
+          lineWidth: ctx.lineWidth,
+        });
+        previewingShape = null;
+        redrawCanvas();
+      } else if(currentTool === 'circle'){
+        const [x, y] = getXY(e);
+        const radius = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+        saveAction({
+          type: 'circle',
+          x: startX,
+          y: startY,
+          radius,
+          color: ctx.strokeStyle,
+          lineWidth: ctx.lineWidth,
+        });
+        previewingShape = null;
+        redrawCanvas();
+      }
+      e.preventDefault();
+    }
+    function draw(e) {
+      if (!drawing) return;
+      const [x, y] = getXY(e);
+      if (currentTool === 'pencil') {
+        const lastAction = actions[actions.length - 1];
+        if(lastAction && lastAction.type === 'line' && lastAction.endX === lastX && lastAction.endY === lastY){
+          lastAction.endX = x;
+          lastAction.endY = y;
+        } else {
+          saveAction({
+            type: 'line',
+            startX: lastX,
+            startY: lastY,
+            endX: x,
+            endY: y,
+            color: ctx.strokeStyle,
+            lineWidth: ctx.lineWidth,
+          });
+        }
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        [lastX, lastY] = [x, y];
+      } else if (currentTool === 'eraser') {
+        eraseAt(x, y);
+        [lastX, lastY] = [x, y];
+      } else if(currentTool === 'rectangle'){
+        previewingShape = {
+          type: 'rectangle',
+          x1: startX,
+          y1: startY,
+          x2: x,
+          y2: y,
+        };
+        redrawCanvas();
+        drawPreviewRect(previewingShape);
+      } else if(currentTool === 'circle'){
+        previewingShape = {
+          type: 'circle',
+          x: startX,
+          y: startY,
+          radius: Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2)),
+        };
+        redrawCanvas();
+        drawPreviewCircle(previewingShape);
+      }
+      e.preventDefault();
+    }
+    function eraseAt(x, y){
+      const size = ctx.lineWidth * 2;
+      ctx.clearRect(x - size/2, y - size/2, size, size);
+      saveAction({
+        type: 'eraser',
+        x: x - size/2,
+        y: y - size/2,
+        width: size,
+        height: size,
+      });
+    }
+    function createRect(x1, y1, x2, y2){
+      const x = Math.min(x1,x2);
+      const y = Math.min(y1,y2);
+      const width = Math.abs(x1-x2);
+      const height = Math.abs(y1-y2);
+      return {x,y,width,height};
+    }
+    function drawPreviewRect(rect) {
+      if(!rect) return;
+      ctx.save();
+      ctx.strokeStyle = ctx.strokeStyle || '#facc15';
+      ctx.lineWidth = ctx.lineWidth || 4;
+      ctx.setLineDash([6]);
+      const r = createRect(rect.x1, rect.y1, rect.x2, rect.y2);
+      ctx.strokeRect(r.x, r.y, r.width, r.height);
+      ctx.restore();
+    }
+    function drawPreviewCircle(circ){
+      if(!circ) return;
+      ctx.save();
+      ctx.strokeStyle = ctx.strokeStyle || '#facc15';
+      ctx.lineWidth = ctx.lineWidth || 4;
+      ctx.setLineDash([6]);
+      ctx.beginPath();
+      ctx.arc(circ.x, circ.y, circ.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+
+    // Control elements
+    const colorPicker = document.getElementById('colorPicker');
+    const lineWidthRange = document.getElementById('lineWidthRange');
+    const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+    const saveCanvasBtn = document.getElementById('saveCanvasBtn');
+
+    colorPicker.addEventListener('input', function() {
+      ctx.strokeStyle = this.value;
+    });
+
+    lineWidthRange.addEventListener('change', function() {
+      ctx.lineWidth = parseInt(this.value, 10) || 4;
+    });
+
+    clearCanvasBtn.addEventListener('click', () => {
+      if(confirm('Clear the entire drawing?')) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        actions = [];
+        redoStack = [];
+      }
+    });
+
+    saveCanvasBtn.addEventListener('click', () => {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = 'drawing.png';
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        alert('Sorry, this browser does not support saving images.');
+      }
+    });
+
+    // Tool buttons
+    const toolButtons = {
+      pencil: document.getElementById('pencilBtn'),
+      rectangle: document.getElementById('rectangleBtn'),
+      circle: document.getElementById('circleBtn'),
+      eraser: document.getElementById('eraserBtn'),
+      undo: document.getElementById('undoBtn'),
+      redo: document.getElementById('redoBtn'),
+    };
+
+    function setActiveTool(tool) {
+      currentTool = tool;
+      canvas.style.cursor = 'crosshair';
+      for(const key in toolButtons){
+        if(toolButtons[key]){
+          if(key === tool){
+            toolButtons[key].classList.add('active');
+          } else {
+            toolButtons[key].classList.remove('active');
+          }
+        }
+      }
+    }
+    toolButtons.pencil.addEventListener('click', () => setActiveTool('pencil'));
+    toolButtons.rectangle.addEventListener('click', () => setActiveTool('rectangle'));
+    toolButtons.circle.addEventListener('click', () => setActiveTool('circle'));
+    toolButtons.eraser.addEventListener('click', () => setActiveTool('eraser'));
+
+    // Undo functionality
+    function undo() {
+      if(actions.length === 0) return;
+      const last = actions.pop();
+      redoStack.push(last);
+      redrawCanvas();
+    }
+    function redo() {
+      if(redoStack.length === 0) return;
+      const action = redoStack.pop();
+      actions.push(action);
+      redrawCanvas();
+    }
+    toolButtons.undo.addEventListener('click', undo);
+    toolButtons.redo.addEventListener('click', redo);
+
+    // Back button to notes view
+    document.getElementById('closeVideoDrawingBtn').addEventListener('click', () => {
+      toggleViews(false);
+    });
+
+    // Move button to show drawing view
+    document.getElementById('moveBtn').addEventListener('click', () => {
+      toggleViews(true);
+    });
+
+    function toggleViews(showDrawing) {
+      const notesView = document.getElementById('notesView');
+      const drawingView = document.getElementById('videoDrawingView');
+      if (showDrawing) {
+        notesView.style.display = 'none';
+        drawingView.classList.add('active');
+      } else {
+        notesView.style.display = 'block';
+        drawingView.classList.remove('active');
+      }
+    }
+  })();
+
+  // ---- Render App (main controls) ----
   function renderApp() {
     document.getElementById('passwordOverlay').style.display = 'none';
     document.getElementById('fullAccessOverlay').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'flex';
     const resetBtn = document.getElementById('resetNotesBtn');
     const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
     const viewOnlyInfo = document.getElementById('viewOnlyInfo');
@@ -930,7 +1554,7 @@
 
   // ---- Accessibility: focus trap for overlays ----
   function trapFocus(element) {
-    const focusable = element.querySelectorAll("input,button");
+    const focusable = element.querySelectorAll("input,button,textarea");
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     element.addEventListener('keydown', function(e) {
@@ -950,6 +1574,7 @@
     });
   }
 
+  // DOMContentLoaded initial setup
   document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     trapFocus(document.getElementById('passwordOverlay'));
@@ -959,7 +1584,7 @@
     setupKeyboardShortcuts();
     if (isAuthenticated()) {
       document.getElementById('passwordOverlay').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'flex';
       renderApp();
     } else {
       setupPasswordForm();
@@ -970,3 +1595,4 @@
 </script>
 </body>
 </html>
+
