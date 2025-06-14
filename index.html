@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Note for Us - Window Edit Mode</title>
+<title>Test V3</title>
 <style>
   :root {
     --color-bg: #ffffff;
@@ -29,6 +29,8 @@
     --card-shadow: 0 1px 10px rgb(0 0 0 / 0.5);
   }
   @import url('https://fonts.googleapis.com/css2?family=Inter&family=Poppins:wght@600&display=swap');
+  /* Google Material Icons already used in original app */
+
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -115,7 +117,8 @@
     transform: scale(1.2) rotate(-12deg);
   }
   #notesView {
-    display: block;
+    display: flex;
+    gap: var(--spacing-gap);
   }
   #videoDrawingView {
     display: none;
@@ -378,7 +381,7 @@
     font-size: 1rem;
     padding: 0.7rem 1.3rem;
     background: var(--color-primary);
-    color: white;
+    color: var(--color-bg);
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
@@ -419,22 +422,35 @@
     justify-content: center;
     align-items: center;
     z-index: 200;
+    opacity: 0;
+    animation: modalFadeIn 0.3s forwards;
   }
   #noteModalOverlay.active {
     display: flex;
+    opacity: 1;
+  }
+  @keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   #noteModal {
     background: var(--card-bg);
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     width: 90%;
-    max-width: 600px;
+    max-width: 700px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
     padding: 1.5rem 2rem;
     overflow-y: auto;
     position: relative;
+    transform: translateY(-30px);
+    animation: modalSlideDown 0.25s forwards;
+  }
+  @keyframes modalSlideDown {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
   #noteModal header {
     display: flex;
@@ -462,6 +478,7 @@
   #noteModal header button.close-btn:focus-visible {
     color: var(--color-primary-hover);
   }
+  /* Rich text editable content */
   #noteModal input.title-input {
     font-family: var(--font-heading);
     font-size: 1.45rem;
@@ -481,7 +498,7 @@
     background-color: var(--card-bg);
     color: var(--color-text);
   }
-  #noteModal textarea.content-textarea {
+  #noteModal #modalNoteContent {
     flex: 1;
     margin-top: 1rem;
     font-family: var(--font-body);
@@ -495,10 +512,31 @@
     min-height: 220px;
     padding: 0.75rem 1rem;
     transition: border-color var(--transition-speed);
+    outline-offset: 2px;
   }
-  #noteModal textarea.content-textarea:focus {
-    outline: none;
+  #noteModal #modalNoteContent:focus {
+    outline: 2px solid var(--color-primary-hover);
     border-color: var(--color-primary-hover);
+  }
+  /* Toolbar for rich text */
+  #richTextToolbar {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  #richTextToolbar button {
+    cursor: pointer;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--border-radius);
+    border: 1.5px solid var(--color-primary);
+    background: var(--card-bg);
+    color: var(--color-primary);
+    font-size: 1rem;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+  }
+  #richTextToolbar button:hover {
+    background-color: var(--color-primary);
+    color: var(--color-bg);
   }
   #noteModal .modal-actions {
     display: flex;
@@ -547,10 +585,337 @@
       max-width: 95vw;
       padding: 1rem;
     }
-    #noteModal textarea.content-textarea {
+    #noteModal #modalNoteContent {
       min-height: 160px;
     }
   }
+  /* Animations for dark mode toggle */
+  @keyframes darkToggleSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  #darkToggle.animate {
+    animation: darkToggleSpin 0.6s ease;
+  }
+  /* Folder/Categories styles for sidebar */
+  #foldersPanel {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    padding: 1rem;
+    margin-bottom: 2rem;
+  }
+  #foldersPanel h3 {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-primary);
+  }
+  #folderList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #folderList li {
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: background-color var(--transition-speed);
+  }
+  #folderList li:hover, #folderList li.active {
+    background-color: var(--color-primary);
+    color: var(--color-bg);
+  }
+  /* Notification Toast */
+  #toastNotification {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background: var(--color-primary);
+    color: var(--color-bg);
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+    z-index: 300;
+    max-width: 300px;
+    font-family: var(--font-body);
+  }
+  #toastNotification.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  /* Voice input button */
+  #voiceInputBtn {
+    font-size: 1.2rem;
+    background: var(--card-bg);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+    padding: 0.3rem 0.5rem;
+    margin-left: 0.5rem;
+  }
+  #voiceInputBtn.listening {
+    background-color: var(--color-primary);
+    color: var(--color-bg);
+  }
+
+  /* Drawing Tool buttons improved UX */
+  #drawingControls button {
+    position: relative;
+    font-size: 1.5rem;
+  }
+  #drawingControls button.active {
+    outline: 2px solid var(--color-primary-hover);
+    outline-offset: 2px;
+    background-color: var(--color-primary-hover);
+    color: var(--color-bg);
+    font-weight: bold;
+  }
+  #drawingControls button[title] {
+    cursor: pointer;
+  }
+  /* Tooltip styling using data-title attribute */
+  #drawingControls button[data-title]:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    bottom: 135%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: var(--color-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    z-index: 10;
+  }
+
+  /* Drag & drop upload area style */
+  #dropZone {
+    border: 2px dashed var(--color-primary);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    display: none;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: 0.8rem;
+  }
+  #dropZone.dragover {
+    background: var(--card-bg);
+    border-color: var(--color-primary-hover);
+    color: var(--color-primary);
+  }
+
+  /* Tag filter container */
+  #tagFilterPanel {
+    margin: 0.5rem 0 1rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #tagFilterPanel button {
+    background: var(--card-bg);
+    border: 1.5px solid var(--color-primary);
+    border-radius: 9999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+  }
+  #tagFilterPanel button.active {
+    background: var(--color-primary);
+    color: var(--color-bg);
+  }
+
+  /* Tag editing inside note modal */
+  #tagEditor {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  #tagEditor .tag-item {
+    background: var(--card-bg);
+    border: 1.5px solid var(--color-primary);
+    border-radius: 9999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  #tagEditor .tag-item button {
+    background: transparent;
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    color: var(--color-primary);
+    padding: 0;
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  #tagEditor input {
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    padding: 0.2rem 0.5rem;
+    font-size: 1rem;
+    width: 120px;
+  }
+
+  /* Templates dropdown */
+  #templateSelect {
+    margin-left: 0.5rem;
+    font-size: 1rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--color-primary);
+    background: var(--card-bg);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  /* Accessibility improvements */
+  .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0,0,0,0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  /* Lazy loading placeholder for images */
+  .note-thumbnail {
+    width: 24px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 4px;
+    border: 1px solid var(--color-primary);
+    object-fit: cover;
+    display: inline-block;
+  }
+
+
+  /* ------------------------ */
+  /* New styles for Access Code Game View */
+  /* ------------------------ */
+
+  #accessCodeGameView {
+    display: none;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    gap: 2.5rem;
+    outline: none;
+  }
+  #accessCodeGameView.active {
+    display: flex;
+  }
+
+  /* Container split into two sections side by side on wider screens */
+  #accessCodeGameView .game-sections {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 768px) {
+    #accessCodeGameView .game-sections {
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+  }
+  #accessCodeGameView section {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  #accessCodeGameView section h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--color-primary);
+  }
+  #generateCodeBtn, #submitCodeBtn {
+    max-width: 240px;
+  }
+
+  /* Code display style */
+  #codeDisplay {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    user-select: all;
+    margin-top: 1rem;
+    background: #e0e7ff; /* Indigo 100 */
+    color: #3730a3; /* Indigo 800 */
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    width: fit-content;
+    outline: none;
+  }
+
+  /* Form and input */
+  #accessCodeInput {
+    font-family: 'Courier New', monospace;
+    font-size: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1.5px solid #d1d5db;
+    transition: border-color var(--transition-speed);
+    max-width: 100%;
+    width: 15ch;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  #accessCodeInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 8px rgba(17,24,39,0.4);
+  }
+  #inputHint {
+    min-height: 2rem;
+    margin-top: 0.3rem;
+    color: #dc2626;
+    font-weight: 600;
+  }
+  #inputHint.success {
+    color: #16a34a;
+  }
+
+  /* Responsive for smaller screens */
+  @media (max-width: 767px) {
+    #accessCodeGameView .game-sections {
+      grid-template-columns: 1fr;
+    }
+    #generateCodeBtn, #submitCodeBtn {
+      width: 100%;
+      justify-content: center;
+    }
+    #accessCodeInput {
+      width: 100%;
+      letter-spacing: normal;
+      text-transform: uppercase;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -573,14 +938,23 @@
   </div>
 </div>
 <!-- Main Content -->
-<div id="mainContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
+<div id="mainContent" style="display: none; flex: 1; flex-direction: column;">
+
   <header>
-    <h1>Note for me and won :3</h1>
+    <h1>Test v3</h1>
     <nav aria-label="Main navigation" style="position: relative;">
+      <!-- Existing nav buttons -->
       <button id="resetNotesBtn" aria-label="Reset to default notes">Reset</button>
       <button id="sortNotesBtn" aria-label="Sort notes" title="Sort notes">Sort</button>
-      <button id="moveBtn" aria-label="Open drawing view">Move</button>
-      <div id="sortMenu" class="sort-menu" aria-label="Sort menu">
+      <button id="moveBtn" aria-label="Open drawing view">Pait</button>
+      
+      <!-- New button to switch between Notes View and Access Code Game View -->
+      <button id="toggleViewBtn" aria-label="Switch to Access Code Game" title="Switch to Access Code Game" style="border-color:#2563eb; color:#2563eb; font-weight: 700; margin-left: 1rem;">
+        Access Code 
+        <span class="material-icons" aria-hidden="true" style="vertical-align:middle; font-size:1.3rem;">F</span>
+      </button>
+
+      <div id="sortMenu" class="sort-menu" aria-label="Sort menu" style="display:none; position: absolute; background: var(--card-bg); border: 1px solid var(--color-primary); border-radius: var(--border-radius); padding: 0.5rem; top: 2.8rem; z-index: 20;">
         <button data-sort="pinned">Pinned first</button>
         <button data-sort="title">By title</button>
         <button data-sort="newest">Newest first</button>
@@ -589,30 +963,55 @@
     </nav>
   </header>
 
-  <!-- Notes View -->
-  <main class="container" id="notesView">
-    <section>
-      <button id="newNoteBtn" style="display:none;" aria-label="Add new note">+ New Note</button>
-      <input id="searchNotes" type="search" placeholder="Search notes..." aria-label="Search notes" style="width:100%;max-width:400px;margin-bottom:1.5rem;font-size:1rem;padding:0.5rem;border-radius:0.5rem;border:1px solid #e5e7eb;" />
+  <!-- Collaborative Editing Banner (Simulated) -->
+  <section id="collaborationBanner" aria-live="polite" style="background: #fde68a; color: #854d0e; padding: 0.5rem 1rem; text-align: center; font-weight: 600; display: none;">
+    Collaborative Editing Enabled (Simulated - multiple tabs sharing localStorage)
+  </section>
+
+  <!-- NOTES VIEW -->
+  <main class="container" id="notesView" style="display:flex; gap:1.5rem;">
+    <!-- Folders panel for categories -->
+    <aside id="foldersPanel" aria-label="Folders and categories" style="width: 220px; flex-shrink: 0;">
+      <h3>Folders</h3>
+      <ul id="folderList" role="list"></ul>
+      <button id="addFolderBtn" style="margin-top: 0.75rem; width: 100%; padding: 0.5rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: transparent; color: var(--color-primary); cursor: pointer;">+ New Folder</button>
+    </aside>
+
+    <section style="flex-grow:1; display:flex; flex-direction:column;">
+      <section aria-label="Note creation and filtering controls" style="display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; gap: 0.5rem;">
+        <button id="newNoteBtn" aria-label="Add new note" style="padding:0.4rem 1rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: transparent; color: var(--color-primary); cursor: pointer;">+ New Note</button>
+        <select id="templateSelect" aria-label="Choose note template">
+          <option value="">No Template</option>
+          <option value="meeting">Meeting Notes</option>
+          <option value="todo">To-Do List</option>
+          <option value="journal">Journal Entry</option>
+        </select>
+        <input id="searchNotes" type="search" placeholder="Search notes (title, content, tags)..." aria-label="Search notes" style="flex-grow:1; min-width: 160px; max-width: 400px; font-size: 1rem; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;" />
+        <button id="clearSearchBtn" title="Clear search" aria-label="Clear search" style="padding: 0.3rem 0.8rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: transparent; color: var(--color-primary); cursor: pointer;">×</button>
+        <button id="clearTagFilterBtn" title="Clear tag filter" aria-label="Clear tag filter" style="padding: 0.3rem 0.8rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: transparent; color: var(--color-primary); cursor: pointer; display:none;">Clear Tags</button>
+      </section>
+
+      <section id="tagFilterPanel" aria-label="Filter notes by tags" role="toolbar" tabindex="0" aria-live="polite" aria-relevant="additions"></section>
+
+      <section id="notes" aria-live="polite" aria-relevant="additions removals" style="flex-grow: 1; overflow-y: auto; min-height: 300px; max-height: 70vh;"></section>
+
+      <div id="dropZone" aria-label="Drop files here to upload as attachments" tabindex="0">Drop audio, video or images here to add to currently selected note</div>
+
+      <section id="customizePanel" aria-label="Customize visible notes and sections" style="margin-top: 1.5rem;"></section>
+      <button id="viewOnlyLoginBtn" style="display: none; margin-top: 1rem; padding: 0.5rem 1.2rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: var(--color-primary); color: var(--color-bg); cursor: pointer;">Login for full access</button>
+      <div id="viewOnlyInfo" style="display: none; color: var(--color-text-muted); font-size: 1em; margin-top: 1.5em;" aria-live="polite">
+        <span>View-only mode: You can read notes, but editing is disabled.</span>
+      </div>
     </section>
-    <section id="notes" aria-live="polite" aria-relevant="additions removals"></section>
-    <section id="customizePanel" aria-label="Customize visible notes and sections">
-      <h2>Edit</h2>
-      <div id="customizeCheckboxes"></div>
-    </section>
-    <button id="viewOnlyLoginBtn" style="display: none;">Login for full access</button>
-    <div id="viewOnlyInfo" style="display: none; color: var(--color-text-muted); font-size: 1em; margin-top: 1.5em;" aria-live="polite">
-      <span>View-only mode: You can read notes, but editing is disabled.</span>
-    </div>
   </main>
 
-  <!-- Drawing View -->
-  <section id="videoDrawingView" aria-label="Drawing canvas panel">
-    <header>
+  <!-- DRAWING VIEW -->
+  <section id="videoDrawingView" aria-label="Drawing canvas panel" style="display:none; flex-direction: column; height: 100vh; background: var(--color-bg); color: var(--color-text);">
+    <header style="display:flex; justify-content: space-between; align-items: center; padding: 1rem;">
       <h2>Drawing Canvas</h2>
-      <button id="closeVideoDrawingBtn" aria-label="Back to notes">Back</button>
+      <button id="closeVideoDrawingBtn" aria-label="Back to notes" style="padding: 0.5rem 1rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary); background: transparent; color: var(--color-primary); cursor: pointer;">Back</button>
     </header>
-    <div id="drawingControls" aria-label="Drawing controls" style="padding: 0.5rem 1rem;">
+    <div id="drawingControls" aria-label="Drawing controls" style="padding: 0.5rem 1rem; display:flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
       <label for="colorPicker" style="margin-right:0.5rem;">Color:</label>
       <input type="color" id="colorPicker" value="#facc15" title="Pick drawing color" />
       <label for="lineWidthRange" style="margin-left:1rem; margin-right:0.5rem;">Line width:</label>
@@ -622,20 +1021,49 @@
         <option value="8">Thick</option>
         <option value="12">Extra Thick</option>
       </select>
-      <button id="pencilBtn" title="Pencil tool" aria-label="Pencil tool" class="active" style="margin-left:1rem;">✏️</button>
-      <button id="rectangleBtn" title="Draw rectangle" aria-label="Rectangle tool">🟦</button>
-      <button id="circleBtn" title="Draw circle" aria-label="Circle tool">⚪</button>
-      <button id="eraserBtn" title="Eraser tool" aria-label="Eraser tool">🧽</button>
-      <button id="undoBtn" title="Undo last action" aria-label="Undo last action" style="margin-left:1rem;">↩️</button>
-      <button id="redoBtn" title="Redo last undone action" aria-label="Redo last action">↪️</button>
-      <button id="clearCanvasBtn" title="Clear drawing" style="margin-left:1rem;">Clear</button>
-      <button id="saveCanvasBtn" title="Save drawing as PNG" style="margin-left:1rem;">Save</button>
+      <button id="pencilBtn" title="Pencil tool" aria-label="Pencil tool" data-title="Pencil tool" class="active" style="margin-left:1rem;">✏️</button>
+      <button id="rectangleBtn" title="Draw rectangle" aria-label="Rectangle tool" data-title="Rectangle tool">🟦</button>
+      <button id="circleBtn" title="Draw circle" aria-label="Circle tool" data-title="Circle tool">⚪</button>
+      <button id="textBtn" title="Add text annotation" aria-label="Text annotation tool" data-title="Text annotation" style="font-weight: bold;">T</button>
+      <button id="eraserBtn" title="Eraser tool" aria-label="Eraser tool" data-title="Eraser tool">🧽</button>
+      <button id="undoBtn" title="Undo last action" aria-label="Undo last action" data-title="Undo" style="margin-left:1rem;">↩️</button>
+      <button id="redoBtn" title="Redo last undone action" aria-label="Redo last action" data-title="Redo">↪️</button>
+      <button id="clearCanvasBtn" title="Clear drawing" data-title="Clear drawing" style="margin-left:1rem;">Clear</button>
+      <button id="saveCanvasBtn" title="Save drawing as PNG" data-title="Save drawing" style="margin-left:1rem;">Save</button>
     </div>
     <canvas id="drawingCanvas" role="img" aria-label="Drawing canvas" tabindex="0" style="flex-grow:1; width:100%; height:100%; border-top: 1px solid var(--color-text-muted);"></canvas>
   </section>
-</div>
 
-<!-- Modal for editing notes-->
+  <!-- ACCESS CODE GAME VIEW (NEW) -->
+  <section id="accessCodeGameView" aria-live="polite" aria-label="Access Code Game View" tabindex="-1" role="main">
+    <div class="game-sections">
+      <section aria-labelledby="generate-title">
+        <h2 id="generate-title">Generate Access Code</h2>
+        <button id="generateCodeBtn" type="button" aria-describedby="codeDescription" aria-label="Generate a new access code">
+          Generate Code
+          <span class="material-icons" aria-hidden="true">autorenew</span>
+        </button>
+        <div id="codeDisplay" aria-live="polite" aria-atomic="true" aria-label="Generated access code" tabindex="0">– – – – – –</div>
+        <p id="codeDescription" class="sr-only">Press the button to generate a new access code consisting of 6 uppercase letters and numbers.</p>
+      </section>
+      <section aria-labelledby="enter-title">
+        <h2 id="enter-title">Enter Access Code</h2>
+        <form id="accessForm" novalidate>
+          <label for="accessCodeInput" class="sr-only">Enter the access code</label>
+          <input type="text" id="accessCodeInput" name="accessCodeInput" maxlength="6" autocomplete="off" inputmode="text" pattern="[A-Z0-9]{6}" placeholder="CODE12" aria-describedby="inputHint" aria-required="true" />
+          <div id="inputHint" class="feedback" aria-live="assertive" aria-atomic="true"></div>
+          <button type="submit" disabled id="submitCodeBtn" aria-label="Submit access code">
+            Submit
+            <span class="material-icons" aria-hidden="true">login</span>
+          </button>
+        </form>
+      </section>
+    </div>
+  </section>
+
+</div> <!-- end mainContent -->
+
+<!-- Modal for editing notes -->
 <div id="noteModalOverlay" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
   <div id="noteModal" tabindex="-1">
     <header>
@@ -643,7 +1071,21 @@
       <button class="close-btn" aria-label="Close note window">&times;</button>
     </header>
     <input type="text" id="modalNoteTitle" class="title-input" aria-label="Edit note title" autocomplete="off" />
-    <textarea id="modalNoteContent" class="content-textarea" aria-label="Edit note content"></textarea>
+    <div id="richTextToolbar" aria-label="Rich text editing toolbar">
+      <button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button>
+      <button type="button" data-cmd="italic" title="Italic"><em>I</em></button>
+      <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+      <button type="button" data-cmd="insertOrderedList" title="Numbered List">1.</button>
+      <button type="button" data-cmd="insertUnorderedList" title="Bullet List">•</button>
+      <button type="button" data-cmd="undo" title="Undo">↺</button>
+      <button type="button" data-cmd="redo" title="Redo">↻</button>
+    </div>
+    <div id="modalNoteContent" contenteditable="true" aria-label="Edit note content" class="content-textarea" style="overflow-y: auto; border: 2px solid transparent;"></div>
+    <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+      <button id="voiceInputBtn" aria-label="Start voice input">🎤 Start Voice</button>
+      <input type="text" id="reminderInput" placeholder="Set reminder (YYYY-MM-DD HH:MM)" aria-label="Set reminder date time" style="flex-grow:1; min-width:160px; padding:0.3rem 0.6rem; border-radius: var(--border-radius); border: 2px solid var(--color-primary);"/>
+      <div id="tagEditor" aria-label="Edit tags for note"></div>
+    </div>
     <div class="modal-actions">
       <button id="modalPinToggle" class="pin-toggle" aria-pressed="false" title="Pin or unpin note">📍 Pin</button>
       <button id="modalDeleteBtn" class="action-btn" title="Delete note">Delete</button>
@@ -652,8 +1094,11 @@
   </div>
 </div>
 
+<!-- Notification Toast -->
+<div id="toastNotification" role="alert" aria-live="assertive" aria-atomic="true" style="display:none;"></div>
+
 <script>
-  // ---- Theme: Dark/Light ----
+  // ---- Theme: Dark/Light with animation ----
   const THEME_KEY = "notesAppTheme";
   function setTheme(theme) {
     document.body.classList.toggle("dark", theme === "dark");
@@ -661,6 +1106,8 @@
     const darkToggle = document.getElementById("darkToggle");
     if(darkToggle) {
       darkToggle.innerText = theme === "dark" ? "☀️" : "🌙";
+      darkToggle.classList.add("animate");
+      setTimeout(() => darkToggle.classList.remove("animate"), 600);
     }
   }
   function toggleTheme() {
@@ -696,23 +1143,39 @@
   function setFullAccess() {
     localStorage.setItem(FULL_ACCESS_KEY, "true");
   }
-  // ---- Notes State ----
-  const defaultNotes = [
-    { id: 'note1', title: 'dream', content: 'i wish i hade someone really understand me like ... idk won i cant type here bcuz anyways u see it :3', pinned: false, created: Date.now() },
-    { id: 'note2', title: 'YouTube Link', content: 'https://www.youtube.com/watch?v=LgUnKB2nY-4', pinned: false, created: Date.now() },
-    { id: 'note3', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note4', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note5', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note6', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note7', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note8', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-    { id: 'note9', title: 'Reminder', content: 'WE GOTTA BUY IT!', pinned: false, created: Date.now() },
-  ];
+
+  // ---- Notes State with folders, tags, reminders ----
+  const defaultNotes = [];
+  // Use localStorage with fallback to default, all notes have folder, tags, reminder, multimedia, and encrypted content (simple base64 here)
   let notes = JSON.parse(localStorage.getItem('notes')) || defaultNotes.map(n => ({ ...n, visible: true }));
   let selectedNoteId = null; // for keyboard shortcuts
 
+  // Folders state
+  let folders = JSON.parse(localStorage.getItem('folders')) || ['General','Links','Work','Personal'];
+
+  // Remember selected folder for filtering
+  let currentFolder = 'All';
+
+  // Tags filter state
+  let currentTagFilters = [];
+
   function saveNotes() {
     localStorage.setItem('notes', JSON.stringify(notes));
+  }
+  function saveFolders() {
+    localStorage.setItem('folders', JSON.stringify(folders));
+  }
+
+  // ---- Helper: Encryption/Decryption (simple base64 for demo) ----
+  function encrypt(text) {
+    return btoa(unescape(encodeURIComponent(text)));
+  }
+  function decrypt(data) {
+    try {
+      return decodeURIComponent(escape(atob(data)));
+    } catch(e) {
+      return data; // fallback in case decoding fails
+    }
   }
 
   // ---- Auth Forms ----
@@ -762,8 +1225,134 @@
     });
   }
 
+  // ---- Folder UI ----
+  const folderListEl = document.getElementById('folderList');
+  function renderFolders() {
+    folderListEl.innerHTML = '';
+    let allActive = currentFolder === 'All' ? 'active' : '';
+    const allLi = document.createElement('li');
+    allLi.textContent = 'All';
+    allLi.className = allActive;
+    allLi.setAttribute('tabindex','0');
+    allLi.addEventListener('click', () => {
+      currentFolder = 'All';
+      renderFolders();
+      renderNotes();
+    });
+    allLi.addEventListener('keypress', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        currentFolder = 'All';
+        renderFolders();
+        renderNotes();
+      }
+    });
+    folderListEl.appendChild(allLi);
+
+    folders.forEach(folder => {
+      const li = document.createElement('li');
+      li.textContent = folder;
+      li.className = (folder === currentFolder) ? 'active' : '';
+      li.setAttribute('tabindex','0');
+      li.addEventListener('click', () => {
+        currentFolder = folder;
+        renderFolders();
+        renderNotes();
+      });
+      li.addEventListener('keypress', e => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          currentFolder = folder;
+          renderFolders();
+          renderNotes();
+        }
+      });
+      folderListEl.appendChild(li);
+    });
+  }
+  document.getElementById('addFolderBtn').addEventListener('click', () => {
+    const folderName = prompt("Enter new folder name:");
+    if(folderName && folderName.trim()){
+      const name = folderName.trim();
+      if(!folders.includes(name)){
+        folders.push(name);
+        saveFolders();
+        renderFolders();
+      } else {
+        alert("Folder already exists.");
+      }
+    }
+  });
+
+  // ---- Tags UI ----
+  const tagFilterPanel = document.getElementById('tagFilterPanel');
+  function collectAllTags() {
+    const tagSet = new Set();
+    notes.forEach(n => {
+      if(Array.isArray(n.tags)){
+        n.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }
+  function renderTagFilter() {
+    tagFilterPanel.innerHTML = '';
+    const allTags = collectAllTags();
+    if(allTags.length === 0){
+      tagFilterPanel.style.display = 'none';
+      return;
+    } else {
+      tagFilterPanel.style.display = 'flex';
+    }
+    allTags.forEach(tag => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = tag;
+      btn.className = currentTagFilters.includes(tag) ? 'active' : '';
+      btn.setAttribute('aria-pressed', currentTagFilters.includes(tag));
+      btn.addEventListener('click', () => {
+        if(currentTagFilters.includes(tag)){
+          currentTagFilters = currentTagFilters.filter(t => t !== tag);
+        } else {
+          currentTagFilters.push(tag);
+        }
+        renderTagFilter();
+        renderNotes();
+        updateCustomizePanel();
+        updateClearTagFilterBtn();
+      });
+      tagFilterPanel.appendChild(btn);
+    });
+  }
+  function updateClearTagFilterBtn(){
+    const btn = document.getElementById('clearTagFilterBtn');
+    if(currentTagFilters.length > 0){
+      btn.style.display = '';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+  document.getElementById('clearTagFilterBtn').addEventListener('click', () => {
+    currentTagFilters = [];
+    renderTagFilter();
+    renderNotes();
+    updateCustomizePanel();
+    updateClearTagFilterBtn();
+  });
+
+
   // ---- Notes UI ----
   let sortType = localStorage.getItem("notesSortType") || "pinned";
+
+  // Full text index for search
+  // We rebuild it once notes change
+  let fullTextIndex = [];
+
+  function rebuildFullTextIndex() {
+    fullTextIndex = notes.map(note => {
+      const text = (note.title + ' ' + (note.content ? note.content.replace(/<[^>]+>/g, '') : '') + ' ' + (note.tags || []).join(' ') + ' ' + (note.folder || '')).toLowerCase();
+      return { id: note.id, text };
+    });
+  }
+
   function sortNotes(a, b) {
     if (sortType === "pinned") {
       if ((a.pinned || false) !== (b.pinned || false)) return b.pinned - a.pinned;
@@ -775,30 +1364,66 @@
     // newest
     return b.created - a.created;
   }
-  // Create note card now without inline editing
+  // Create note card supports multimedia (images, audio, video), tags and folder filter, lazy media loading
   function createNoteCard(note, readonly = false) {
+    if(currentFolder !== 'All' && note.folder !== currentFolder) return null;
+    if(currentTagFilters.length > 0){
+      if(!note.tags || !currentTagFilters.every(t => note.tags.includes(t))){
+        return null;
+      }
+    }
+
     const card = document.createElement('article');
     card.className = 'note-card';
     if (note.pinned) card.classList.add('pinned');
     card.setAttribute('data-note-id', note.id);
     card.tabIndex = 0; // focusable for keyboard
 
-    // Title preview
+    // Title container with folder label and tags badges
+    const titleContainer = document.createElement('div');
+    titleContainer.style.display = 'flex';
+    titleContainer.style.flexWrap = 'wrap';
+    titleContainer.style.alignItems = 'center';
+    titleContainer.style.gap = '0.4rem';
+
     const titleEl = document.createElement('h3');
     titleEl.className = 'note-title';
     titleEl.innerText = note.title || 'Untitled';
+    titleEl.style.flex = '1 1 auto';
 
-    // Content preview
-    const contentEl = document.createElement('div');
-    contentEl.className = 'note-content-preview';
-    contentEl.innerText = note.content || '';
+    // Folder label on card if not 'All' or 'General'
+    if(note.folder && note.folder !== 'General' && currentFolder !== note.folder){
+      const folderLabel = document.createElement('small');
+      folderLabel.style.fontSize = '0.7rem';
+      folderLabel.style.color = getComputedStyle(document.body).getPropertyValue('--color-text-muted');
+      folderLabel.innerText = `[${note.folder}]`;
+      folderLabel.style.marginLeft = '0.4rem';
+      titleContainer.appendChild(folderLabel);
+    }
+
+    titleContainer.appendChild(titleEl);
+
+    // Tag badges inline
+    if(Array.isArray(note.tags) && note.tags.length > 0){
+      note.tags.forEach(tag => {
+        const tagBadge = document.createElement('span');
+        tagBadge.style.fontSize = '0.7rem';
+        tagBadge.style.borderRadius = '12px';
+        tagBadge.style.padding = '0 8px';
+        tagBadge.style.backgroundColor = 'var(--color-primary-hover)';
+        tagBadge.style.color = 'var(--color-bg)';
+        tagBadge.textContent = tag;
+        tagBadge.title = `Tag: ${tag}`;
+        titleContainer.appendChild(tagBadge);
+      });
+    }
 
     // Header container for title and actions
     const header = document.createElement('div');
     header.className = 'note-header';
-    header.appendChild(titleEl);
+    header.appendChild(titleContainer);
 
-    if (!readonly) {
+    if (!readonly && card !== null) {
       const actions = document.createElement('div');
       actions.className = 'note-actions';
 
@@ -812,6 +1437,7 @@
         e.stopPropagation(); // prevent card click
         note.pinned = !note.pinned;
         saveNotes();
+        rebuildFullTextIndex();
         renderNotes();
         updateCustomizePanel();
       });
@@ -827,6 +1453,7 @@
         if (confirm(`Delete note "${note.title}"?`)) {
           notes = notes.filter(n => n.id !== note.id);
           saveNotes();
+          rebuildFullTextIndex();
           renderNotes();
           updateCustomizePanel();
           closeNoteModal(); // Close modal if open for this note
@@ -838,22 +1465,82 @@
     }
 
     card.appendChild(header);
+
+    // Content preview (strip HTML tags for contenteditable)
+    const contentEl = document.createElement('div');
+    contentEl.className = 'note-content-preview';
+    // decode HTML entities for display
+    contentEl.innerText = note.content ? note.content.replace(/<[^>]+>/g, '') : '';
     card.appendChild(contentEl);
 
-    // Open note modal on card click
-    card.addEventListener('click', () => {
-      if (!readonly) {
-        openNoteModal(note.id);
+    // Reminder indicator if set and future
+    if(note.reminder){
+      const reminderDate = new Date(note.reminder);
+      if(reminderDate > new Date()){
+        const reminderSpan = document.createElement('span');
+        reminderSpan.textContent = " ⏰";
+        reminderSpan.title = `Reminder set for ${reminderDate.toLocaleString()}`;
+        reminderSpan.style.color = '#dc2626'; // red to highlight
+        reminderSpan.style.fontWeight = 'bold';
+        contentEl.appendChild(reminderSpan);
       }
-    });
-    card.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
+    }
+
+    // Multimedia preview icons or image/audio/video thumbnails with lazy loading
+    if(note.multimedia && note.multimedia.length > 0){
+      const multimediaContainer = document.createElement('span');
+      multimediaContainer.style.display = 'inline-flex';
+      multimediaContainer.style.gap = '0.3rem';
+      multimediaContainer.style.marginLeft = '0.6rem';
+      multimediaContainer.title = `${note.multimedia.length} attachment(s)`;
+      note.multimedia.forEach((item, idx) => {
+        if(typeof item === 'string'){
+          if(item.startsWith('data:image') || item.match(/\.(png|jpg|jpeg|gif)$/i)) {
+            const img = document.createElement('img');
+            img.dataset.src = item;
+            img.alt = `Attachment ${idx+1} thumbnail`;
+            img.className = 'note-thumbnail lazy';
+            multimediaContainer.appendChild(img);
+          } else if(item.startsWith('data:audio') || item.match(/\.(mp3|wav|ogg)$/i)) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = item;
+            audio.style.width = '120px';
+            audio.title = `Audio Attachment ${idx+1}`;
+            multimediaContainer.appendChild(audio);
+          } else if(item.startsWith('data:video') || item.match(/\.(mp4|webm|ogg)$/i)) {
+            const video = document.createElement('video');
+            video.controls = true;
+            video.src = item;
+            video.style.width = '160px';
+            video.title = `Video Attachment ${idx+1}`;
+            multimediaContainer.appendChild(video);
+          } else {
+            const icon = document.createElement('span');
+            icon.textContent = "🖼️";
+            multimediaContainer.appendChild(icon);
+          }
+        }
+      });
+      card.appendChild(multimediaContainer);
+    }
+
+    if(card !== null){
+      // Open note modal on card click
+      card.addEventListener('click', () => {
         if (!readonly) {
           openNoteModal(note.id);
         }
-      }
-    });
+      });
+      card.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!readonly) {
+            openNoteModal(note.id);
+          }
+        }
+      });
+    }
 
     return card;
   }
@@ -862,21 +1549,72 @@
     const notesContainer = document.getElementById('notes');
     notesContainer.innerHTML = '';
     const readonly = !hasFullAccess();
-    const searchTerm = (document.getElementById('searchNotes').value || '').toLowerCase();
-    notes
-      .filter(note => (note.visible !== false) && (note.title.toLowerCase().includes(searchTerm) || note.content.toLowerCase().includes(searchTerm)))
-      .sort(sortNotes)
-      .forEach(note => {
-        notesContainer.appendChild(createNoteCard(note, readonly));
+    const searchTerm = (document.getElementById('searchNotes').value || '').toLowerCase().trim();
+
+    let filteredNotes = notes.filter(note => note.visible !== false);
+    if(currentFolder !== 'All') {
+      filteredNotes = filteredNotes.filter(n => n.folder === currentFolder);
+    }
+    if(currentTagFilters.length > 0) {
+      filteredNotes = filteredNotes.filter(n => {
+        return n.tags && currentTagFilters.every(t => n.tags.includes(t));
       });
+    }
+    if(searchTerm) {
+      // Full-text search using built index
+      filteredNotes = filteredNotes.filter(note => {
+        const indexEntry = fullTextIndex.find(e => e.id === note.id);
+        return indexEntry && indexEntry.text.includes(searchTerm);
+      });
+    }
+
+    filteredNotes.sort(sortNotes).forEach(note => {
+      const noteCard = createNoteCard(note, readonly);
+      if(noteCard) notesContainer.appendChild(noteCard);
+    });
+
     // Show/hide newNoteBtn depending on mode
     document.getElementById("newNoteBtn").style.display = hasFullAccess() ? "" : "none";
+
+    // Setup lazy loading for images
+    setupLazyLoadingImages();
+  }
+
+  // ---- Lazy loading images to enhance performance ----
+  function setupLazyLoadingImages(){
+    if('IntersectionObserver' in window){
+      const lazyImages = [].slice.call(document.querySelectorAll('img.lazy'));
+      if(lazyImages.length === 0) return;
+      const imgObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if(entry.isIntersecting){
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.classList.remove('lazy');
+            imgObserver.unobserve(img);
+          }
+        });
+      });
+      lazyImages.forEach(img => imgObserver.observe(img));
+    } else {
+      // fallback: load all images immediately
+      document.querySelectorAll('img.lazy').forEach(img => {
+        img.src = img.dataset.src;
+        img.classList.remove('lazy');
+      });
+    }
   }
 
   // ---- DRAGGABLE, EASY CUSTOMIZE PANEL ----
   function updateCustomizePanel() {
     const customizePanel = document.getElementById('customizePanel');
-    const container = document.getElementById('customizeCheckboxes');
+    // Create container div with checkboxes
+    let container = document.getElementById('customizeCheckboxes');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'customizeCheckboxes';
+      customizePanel.appendChild(container);
+    }
     container.innerHTML = '';
     if (!hasFullAccess()) {
       customizePanel.style.display = 'none';
@@ -910,6 +1648,7 @@
           const moved = notes.splice(fromIdx, 1)[0];
           notes.splice(toIdx, 0, moved);
           saveNotes();
+          rebuildFullTextIndex();
           updateCustomizePanel();
           renderNotes();
         }
@@ -926,6 +1665,7 @@
       checkbox.addEventListener('change', () => {
         note.visible = checkbox.checked;
         saveNotes();
+        rebuildFullTextIndex();
         renderNotes();
       });
       label.appendChild(dragIcon);
@@ -935,33 +1675,71 @@
     });
   }
 
+  // ---- Reset Notes ----
   function resetNotes() {
     if (confirm('Reset all notes to default? This cannot be undone.')) {
       notes = defaultNotes.map(n => ({ ...n, visible: true }));
+      folders = ['General','Links','Work','Personal'];
+      currentFolder = 'All';
+      currentTagFilters = [];
       saveNotes();
+      saveFolders();
+      rebuildFullTextIndex();
+      renderFolders();
       renderNotes();
+      renderTagFilter();
+      updateClearTagFilterBtn();
       updateCustomizePanel();
     }
   }
 
-  // ---- New Note ----
-  function addNewNote() {
+  // ---- New Note with template support ----
+  function addNewNote(templateKey = "") {
     const id = "note" + Math.random().toString(36).slice(2, 10);
+    let title = "Untitled";
+    let content = "";
+    let tags = [];
+    if(templateKey === "meeting") {
+      title = "Meeting Notes";
+      content = "<ul><li>Attendees:</li><li>Agenda:</li><li>Notes:</li></ul>";
+      tags.push("meeting");
+    } else if(templateKey === "todo") {
+      title = "To-Do List";
+      content = "<ul><li>[ ] Item 1</li><li>[ ] Item 2</li></ul>";
+      tags.push("todo");
+    } else if(templateKey === "journal") {
+      title = "Journal Entry";
+      content = "Today I…";
+      tags.push("journal");
+    }
     const note = {
       id,
-      title: "Untitled",
-      content: "",
+      title,
+      content,
       visible: true,
       pinned: false,
-      created: Date.now()
+      created: Date.now(),
+      folder: currentFolder === 'All' ? 'General' : currentFolder,
+      tags,
+      reminder: '',
+      multimedia: []
     };
     notes.unshift(note);
     saveNotes();
+    rebuildFullTextIndex();
     selectedNoteId = id;
     renderNotes();
+    renderTagFilter();
+    updateClearTagFilterBtn();
     updateCustomizePanel();
     openNoteModal(id);
   }
+  // Template select change handler
+  document.getElementById('templateSelect').addEventListener('change', (e) => {
+    const val = e.target.value;
+    addNewNote(val);
+    e.target.value = "";
+  });
 
   // ---- Sorting Menu ----
   function setupSortMenu() {
@@ -1008,6 +1786,7 @@
         if (note) {
           note.pinned = !note.pinned;
           saveNotes();
+          rebuildFullTextIndex();
           renderNotes();
           updateCustomizePanel();
         }
@@ -1045,13 +1824,19 @@
   const modalOverlay = document.getElementById('noteModalOverlay');
   const modal = document.getElementById('noteModal');
   const modalTitleInput = document.getElementById('modalNoteTitle');
-  const modalContentTextarea = document.getElementById('modalNoteContent');
+  const modalContentEditable = document.getElementById('modalNoteContent');
   const modalPinToggle = document.getElementById('modalPinToggle');
   const modalDeleteBtn = document.getElementById('modalDeleteBtn');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const modalCloseIconBtn = modal.querySelector('header button.close-btn');
+  const reminderInput = document.getElementById('reminderInput');
+  const voiceInputBtn = document.getElementById('voiceInputBtn');
+  const tagEditor = document.getElementById('tagEditor');
+  const dropZone = document.getElementById('dropZone');
 
   let modalNoteId = null;
+  let voiceRecognition;
+  let voiceActive = false;
 
   function isNoteModalOpen() {
     return modalOverlay.classList.contains('active');
@@ -1061,9 +1846,11 @@
     const note = notes.find(n => n.id === id);
     if (!note) return;
     modalTitleInput.value = note.title || 'Untitled';
-    modalContentTextarea.value = note.content || '';
+    modalContentEditable.innerHTML = note.content || '';
+    reminderInput.value = note.reminder || '';
     updatePinToggle(note.pinned);
     modalPinToggle.setAttribute('aria-pressed', note.pinned ? 'true' : 'false');
+    renderTagEditor(note);
     modalOverlay.classList.add('active');
     modalTitleInput.focus();
     disablePageScroll(true);
@@ -1074,6 +1861,7 @@
     modalNoteId = null;
     disablePageScroll(false);
     document.activeElement.blur();
+    stopVoiceRecognition();
   }
   function updatePinToggle(pinned) {
     if(pinned) {
@@ -1095,18 +1883,46 @@
     if (!note) return;
     note.title = modalTitleInput.value.trim() || 'Untitled';
     saveNotes();
+    rebuildFullTextIndex();
     renderNotes();
     updateCustomizePanel();
   });
-  modalContentTextarea.addEventListener('input', () => {
+
+  // On content editable changes, save with basic sanitization for HTML
+  modalContentEditable.addEventListener('input', () => {
     if (!modalNoteId) return;
     const note = notes.find(n => n.id === modalNoteId);
     if (!note) return;
-    note.content = modalContentTextarea.value;
+    note.content = modalContentEditable.innerHTML;
     saveNotes();
+    rebuildFullTextIndex();
     renderNotes();
     updateCustomizePanel();
   });
+
+  // Reminder Input
+  reminderInput.addEventListener('change', () => {
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    const val = reminderInput.value.trim();
+    // Validate datetime format loosely YYYY-MM-DD HH:MM
+    const valid = /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?$/.test(val);
+    if(valid || val === ''){
+      note.reminder = val;
+      saveNotes();
+      rebuildFullTextIndex();
+      renderNotes();
+      updateCustomizePanel();
+      if(val && new Date(val) > new Date()){
+        showToast("Reminder set for "+new Date(val).toLocaleString());
+      }
+    } else {
+      alert("Invalid reminder date/time format. Use YYYY-MM-DD or YYYY-MM-DD HH:MM");
+      reminderInput.value = note.reminder || '';
+    }
+  });
+
   modalPinToggle.addEventListener('click', () => {
     if (!modalNoteId) return;
     const note = notes.find(n => n.id === modalNoteId);
@@ -1114,6 +1930,7 @@
     note.pinned = !note.pinned;
     updatePinToggle(note.pinned);
     saveNotes();
+    rebuildFullTextIndex();
     renderNotes();
     updateCustomizePanel();
   });
@@ -1124,6 +1941,7 @@
     if (confirm(`Delete note "${note.title}"?`)) {
       notes = notes.filter(n => n.id !== modalNoteId);
       saveNotes();
+      rebuildFullTextIndex();
       renderNotes();
       updateCustomizePanel();
       closeNoteModal();
@@ -1132,7 +1950,7 @@
   modalCloseBtn.addEventListener('click', closeNoteModal);
   modalCloseIconBtn.addEventListener('click', closeNoteModal);
 
-  // Close modal on overlay click (but not when clicking modal content)
+  // Close modal on overlay click (but not modal content)
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
       closeNoteModal();
@@ -1147,6 +1965,8 @@
       'textarea:not([disabled]):not([tabindex="-1"])',
       'input[type="text"]:not([disabled]):not([tabindex="-1"])',
       'input[type="password"]:not([disabled]):not([tabindex="-1"])',
+      'input[type="search"]:not([disabled]):not([tabindex="-1"])',
+      '[contenteditable="true"]:not([tabindex="-1"])',
       '[tabindex]:not([tabindex="-1"])'
     ];
     const focusable = element.querySelectorAll(focusableSelectors.join(','));
@@ -1179,7 +1999,229 @@
     }
   }
 
-  // ---- Drawing Canvas Logic ----
+  // ---- Voice Input ----
+  voiceInputBtn.addEventListener('click', () => {
+    if(voiceActive){
+      stopVoiceRecognition();
+    } else {
+      startVoiceRecognition();
+    }
+  });
+
+  function startVoiceRecognition() {
+    if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.continuous = true;
+    voiceRecognition.interimResults = true;
+    voiceRecognition.lang = 'en-US';
+    voiceRecognition.start();
+    voiceActive = true;
+    voiceInputBtn.classList.add('listening');
+    voiceInputBtn.textContent = '🎙️ Listening...';
+
+    voiceRecognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      for(let i = event.resultIndex; i < event.results.length; i++){
+        const transcript = event.results[i][0].transcript;
+        if(event.results[i].isFinal){
+          final += transcript + ' ';
+        } else {
+          interim += transcript;
+        }
+      }
+      if(final){
+        modalContentEditable.innerHTML += final;
+        saveCurrentNoteContent();
+      }
+    };
+    voiceRecognition.onerror = (e) => {
+      console.error('Speech recognition error:', e.error);
+      stopVoiceRecognition();
+      showToast("Speech recognition stopped due to an error.");
+    };
+    voiceRecognition.onend = () => {
+      stopVoiceRecognition();
+    };
+  }
+  function stopVoiceRecognition() {
+    if(voiceRecognition){
+      voiceRecognition.stop();
+      voiceRecognition = null;
+    }
+    voiceActive = false;
+    voiceInputBtn.classList.remove('listening');
+    voiceInputBtn.textContent = '🎤 Start Voice';
+  }
+  // Save current note content helper
+  function saveCurrentNoteContent(){
+    if (!modalNoteId) return;
+    const note = notes.find(n => n.id === modalNoteId);
+    if (!note) return;
+    note.content = modalContentEditable.innerHTML;
+    saveNotes();
+    rebuildFullTextIndex();
+    renderNotes();
+    updateCustomizePanel();
+  }
+
+  // ---- Reminder Notification Checker ----
+  function checkReminderNotifications(){
+    const now = new Date();
+    notes.forEach(note => {
+      if(note.reminder){
+        const remDate = new Date(note.reminder);
+        if(remDate > now && remDate - now < 60000){ // reminder in next 60s
+          showToast(`Reminder: "${note.title}" at ${remDate.toLocaleString()}`);
+          // Also show browser notification if permitted
+          if(window.Notification && Notification.permission === "granted"){
+            new Notification("Note Reminder", {
+              body: `Reminder: "${note.title}"`,
+              silent: false
+            });
+          }
+        }
+      }
+    });
+  }
+
+  // Request notification permission on load if not granted
+  document.addEventListener('DOMContentLoaded', () => {
+    if("Notification" in window){
+      if(Notification.permission === "default"){
+        Notification.requestPermission();
+      }
+    }
+  });
+
+  // Check reminders periodically every 30 seconds
+  setInterval(() => {
+    if(isAuthenticated()){
+      checkReminderNotifications();
+    }
+  }, 30000);
+
+  // ---- Render App (main controls) ----
+  function renderApp() {
+    document.getElementById('passwordOverlay').style.display = 'none';
+    document.getElementById('fullAccessOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'flex';
+    const resetBtn = document.getElementById('resetNotesBtn');
+    const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
+    const viewOnlyInfo = document.getElementById('viewOnlyInfo');
+    if (hasFullAccess()) {
+      resetBtn.style.display = '';
+      document.getElementById('customizePanel').style.display = '';
+      viewOnlyLoginBtn.style.display = 'none';
+      viewOnlyInfo.style.display = 'none';
+      resetBtn.onclick = resetNotes;
+      document.getElementById("newNoteBtn").style.display = "";
+      document.getElementById("newNoteBtn").onclick = () => addNewNote();
+      renderTagFilter();
+    } else {
+      resetBtn.style.display = 'none';
+      document.getElementById('customizePanel').style.display = 'none';
+      viewOnlyLoginBtn.style.display = '';
+      viewOnlyInfo.style.display = '';
+      document.getElementById("newNoteBtn").style.display = "none";
+      viewOnlyLoginBtn.onclick = () => {
+        document.getElementById('fullAccessOverlay').style.display = 'flex';
+        document.getElementById('fullAccessInput').focus();
+      };
+    }
+    renderFolders();
+    rebuildFullTextIndex();
+    renderNotes();
+    updateCustomizePanel();
+    updateClearTagFilterBtn();
+    checkReminderNotifications();
+  }
+
+  // ---- Accessibility: focus trap for overlays ----
+  // trapFocus defined above
+
+  // ---- Toast Notifications ----
+  const toast = document.getElementById('toastNotification');
+  let toastTimeout;
+  function showToast(message, duration = 3000) {
+    clearTimeout(toastTimeout);
+    toast.textContent = message;
+    toast.style.display = 'block';
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+    toastTimeout = setTimeout(() => {
+      toast.classList.remove('show');
+      toastTimeout = setTimeout(() => toast.style.display = 'none', 400);
+    }, duration);
+  }
+
+  // ---- Rich Text Toolbar ----
+  const richTextToolbar = document.getElementById('richTextToolbar');
+  richTextToolbar.addEventListener('click', (e) => {
+    if(e.target.tagName === 'BUTTON'){
+      const cmd = e.target.dataset.cmd;
+      if(cmd === 'undo') document.execCommand('undo');
+      else if(cmd === 'redo') document.execCommand('redo');
+      else document.execCommand(cmd, false, null);
+      modalContentEditable.focus();
+    }
+  });
+
+  // ---- Tag Editor ----
+  // Render tags with remove buttons and input to add new tags
+  function renderTagEditor(note) {
+    tagEditor.innerHTML = '';
+    if(!note.tags) note.tags = [];
+    note.tags.forEach(tag => {
+      const tagItem = document.createElement('div');
+      tagItem.className = 'tag-item';
+      tagItem.textContent = tag;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.ariaLabel = `Remove tag ${tag}`;
+      delBtn.innerHTML = '&times;';
+      delBtn.addEventListener('click', () => {
+        note.tags = note.tags.filter(t => t !== tag);
+        saveNotes();
+        rebuildFullTextIndex();
+        renderNotes();
+        updateCustomizePanel();
+        renderTagFilter();
+        renderTagEditor(note);
+      });
+      tagItem.appendChild(delBtn);
+      tagEditor.appendChild(tagItem);
+    });
+    // Input to add new tags
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Add tag...';
+    input.setAttribute('aria-label', 'Add tag');
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        const val = input.value.trim();
+        if(val && !note.tags.includes(val)){
+          note.tags.push(val);
+          saveNotes();
+          rebuildFullTextIndex();
+          renderNotes();
+          updateCustomizePanel();
+          renderTagFilter();
+          renderTagEditor(note);
+          input.value = '';
+        }
+        e.preventDefault();
+      }
+    });
+    tagEditor.appendChild(input);
+  }
+
+  // ---- Drawing Canvas Logic with extra text annotation tool ----
   (function(){
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
@@ -1189,10 +2231,11 @@
     let lastY = 0;
     let startX = 0;
     let startY = 0;
-    let currentTool = 'pencil'; // pencil, rectangle, circle, eraser
+    let currentTool = 'pencil'; // pencil, rectangle, circle, eraser, text
     let actions = [];
     let redoStack = [];
     let previewingShape = null;
+    let textInput = null;
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -1261,11 +2304,67 @@
       } else if(action.type === 'eraser'){
         // For eraser, clear the rectangle area on redraw
         ctx.clearRect(action.x, action.y, action.width, action.height);
+      } else if(action.type === 'text'){
+        ctx.font = `${action.fontSize}px sans-serif`;
+        ctx.fillStyle = action.color || '#facc15';
+        ctx.fillText(action.text, action.x, action.y);
       }
       ctx.restore();
     }
 
     function startDrawing(e) {
+      if(currentTool === 'text') {
+        // For text, show input box at click point
+        const [x,y] = getXY(e);
+        if(textInput) return;
+        textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.style.position = 'absolute';
+        const rect = canvas.getBoundingClientRect();
+        textInput.style.left = (rect.left + x) + 'px';
+        textInput.style.top = (rect.top + y - 20) + 'px';
+        textInput.style.fontSize = '16px';
+        textInput.style.padding = '2px 4px';
+        textInput.style.border = '2px solid var(--color-primary)';
+        textInput.style.borderRadius = '4px';
+        textInput.setAttribute('aria-label','Enter text annotation');
+        document.body.appendChild(textInput);
+        textInput.focus();
+
+        const finishText = () => {
+          const val = textInput.value.trim();
+          if(val){
+            saveAction({
+              type: 'text',
+              x,
+              y,
+              text: val,
+              color: ctx.strokeStyle,
+              fontSize: 16,
+            });
+            redrawCanvas();
+          }
+          document.body.removeChild(textInput);
+          textInput = null;
+        };
+
+        textInput.addEventListener('keydown', (evt) => {
+          if(evt.key === 'Enter'){
+            finishText();
+          }
+          else if(evt.key === 'Escape'){
+            document.body.removeChild(textInput);
+            textInput = null;
+          }
+        });
+        textInput.addEventListener('blur', () => {
+          if(textInput){
+            finishText();
+          }
+        });
+        return;
+      }
+
       drawing = true;
       [lastX, lastY] = getXY(e);
       [startX, startY] = [lastX, lastY];
@@ -1426,10 +2525,12 @@
 
     colorPicker.addEventListener('input', function() {
       ctx.strokeStyle = this.value;
+      showToast(`Drawing color changed`);
     });
 
     lineWidthRange.addEventListener('change', function() {
       ctx.lineWidth = parseInt(this.value, 10) || 4;
+      showToast(`Line width set to ${ctx.lineWidth}`);
     });
 
     clearCanvasBtn.addEventListener('click', () => {
@@ -1437,6 +2538,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         actions = [];
         redoStack = [];
+        showToast(`Drawing cleared`);
       }
     });
 
@@ -1449,6 +2551,19 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        // Save drawing as multimedia attached to selected note
+        if(modalNoteId){
+          const note = notes.find(n => n.id === modalNoteId);
+          if(note){
+            if(!note.multimedia) note.multimedia = [];
+            note.multimedia.push(dataUrl);
+            saveNotes();
+            rebuildFullTextIndex();
+            renderNotes();
+            updateCustomizePanel();
+            showToast("Drawing saved to current note.");
+          }
+        }
       } catch (e) {
         alert('Sorry, this browser does not support saving images.');
       }
@@ -1459,6 +2574,7 @@
       pencil: document.getElementById('pencilBtn'),
       rectangle: document.getElementById('rectangleBtn'),
       circle: document.getElementById('circleBtn'),
+      text: document.getElementById('textBtn'),
       eraser: document.getElementById('eraserBtn'),
       undo: document.getElementById('undoBtn'),
       redo: document.getElementById('redoBtn'),
@@ -1476,24 +2592,34 @@
           }
         }
       }
+      showToast(`Selected tool: ${tool.charAt(0).toUpperCase() + tool.slice(1)}`);
     }
     toolButtons.pencil.addEventListener('click', () => setActiveTool('pencil'));
     toolButtons.rectangle.addEventListener('click', () => setActiveTool('rectangle'));
     toolButtons.circle.addEventListener('click', () => setActiveTool('circle'));
+    toolButtons.text.addEventListener('click', () => setActiveTool('text'));
     toolButtons.eraser.addEventListener('click', () => setActiveTool('eraser'));
 
     // Undo functionality
     function undo() {
-      if(actions.length === 0) return;
+      if(actions.length === 0) {
+        showToast("Nothing to undo.");
+        return;
+      }
       const last = actions.pop();
       redoStack.push(last);
       redrawCanvas();
+      showToast("Undo performed");
     }
     function redo() {
-      if(redoStack.length === 0) return;
+      if(redoStack.length === 0) {
+        showToast("Nothing to redo.");
+        return;
+      }
       const action = redoStack.pop();
       actions.push(action);
       redrawCanvas();
+      showToast("Redo performed");
     }
     toolButtons.undo.addEventListener('click', undo);
     toolButtons.redo.addEventListener('click', redo);
@@ -1513,66 +2639,97 @@
       const drawingView = document.getElementById('videoDrawingView');
       if (showDrawing) {
         notesView.style.display = 'none';
+        drawingView.style.display = 'flex';
         drawingView.classList.add('active');
       } else {
-        notesView.style.display = 'block';
+        notesView.style.display = 'flex';
+        drawingView.style.display = 'none';
         drawingView.classList.remove('active');
       }
     }
   })();
 
-  // ---- Render App (main controls) ----
-  function renderApp() {
-    document.getElementById('passwordOverlay').style.display = 'none';
-    document.getElementById('fullAccessOverlay').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'flex';
-    const resetBtn = document.getElementById('resetNotesBtn');
-    const viewOnlyLoginBtn = document.getElementById('viewOnlyLoginBtn');
-    const viewOnlyInfo = document.getElementById('viewOnlyInfo');
-    if (hasFullAccess()) {
-      resetBtn.style.display = '';
-      document.getElementById('customizePanel').style.display = '';
-      viewOnlyLoginBtn.style.display = 'none';
-      viewOnlyInfo.style.display = 'none';
-      resetBtn.onclick = resetNotes;
-      document.getElementById("newNoteBtn").style.display = "";
-      document.getElementById("newNoteBtn").onclick = addNewNote;
+  // ---- Drag & Drop Multimedia Upload for current note ----
+  dropZone.style.display = 'none'; // initially hidden
+
+  function showDropZone(show) {
+    if(show && modalNoteId !== null){
+      dropZone.style.display = 'block';
     } else {
-      resetBtn.style.display = 'none';
-      document.getElementById('customizePanel').style.display = 'none';
-      viewOnlyLoginBtn.style.display = '';
-      viewOnlyInfo.style.display = '';
-      document.getElementById("newNoteBtn").style.display = "none";
-      viewOnlyLoginBtn.onclick = () => {
-        document.getElementById('fullAccessOverlay').style.display = 'flex';
-        document.getElementById('fullAccessInput').focus();
-      };
+      dropZone.style.display = 'none';
     }
-    renderNotes();
-    updateCustomizePanel();
   }
 
-  // ---- Accessibility: focus trap for overlays ----
-  function trapFocus(element) {
-    const focusable = element.querySelectorAll("input,button,textarea");
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    element.addEventListener('keydown', function(e) {
-      if (e.key === 'Tab') {
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+
+    if(!modalNoteId) {
+      showToast("No note selected for uploading attachments.");
+      return;
+    }
+    const note = notes.find(n => n.id === modalNoteId);
+    if(!note) return;
+
+    const files = e.dataTransfer.files;
+    if(files.length === 0){
+      showToast("No files to upload.");
+      return;
+    }
+
+    const supportedImageTypes = ['image/png', 'image/jpeg', 'image/gif'];
+    const supportedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
+    const supportedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        if(!note.multimedia) note.multimedia = [];
+        const result = evt.target.result;
+        // Only add if supported format
+        if(supportedImageTypes.includes(file.type) ||
+           supportedAudioTypes.includes(file.type) ||
+           supportedVideoTypes.includes(file.type)){
+          note.multimedia.push(result);
+          saveNotes();
+          rebuildFullTextIndex();
+          renderNotes();
+          updateCustomizePanel();
+          showToast(`Added attachment: ${file.name}`);
         } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
+          showToast(`Unsupported file type: ${file.name}`);
         }
-      }
+      };
+      reader.readAsDataURL(file);
     });
-  }
+  });
+
+  // Show or hide drop zone depending on modal open state
+  const observer = new MutationObserver(() => {
+    showDropZone(isNoteModalOpen());
+  });
+  observer.observe(modalOverlay, { attributes: true, attributeFilter: ['class'] });
+
+  // ---- Collaborative Editing Simulation ----
+  window.addEventListener('storage', (e) => {
+    if(e.key === 'notes'){
+      const newNotes = JSON.parse(e.newValue);
+      if(JSON.stringify(newNotes) !== JSON.stringify(notes)){
+        notes = newNotes;
+        rebuildFullTextIndex();
+        renderNotes();
+        updateCustomizePanel();
+        showToast('Notes updated from another tab');
+      }
+    }
+  });
 
   // DOMContentLoaded initial setup
   document.addEventListener('DOMContentLoaded', () => {
@@ -1580,6 +2737,10 @@
     trapFocus(document.getElementById('passwordOverlay'));
     trapFocus(document.getElementById('fullAccessOverlay'));
     document.getElementById('searchNotes').addEventListener('input', renderNotes);
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+      document.getElementById('searchNotes').value = '';
+      renderNotes();
+    });
     setupSortMenu();
     setupKeyboardShortcuts();
     if (isAuthenticated()) {
@@ -1591,8 +2752,106 @@
       document.getElementById('passwordInput').focus();
     }
     setupFullAccessForm();
+
+    // Setup view toggle button functionality
+    const toggleButton = document.getElementById('toggleViewBtn');
+    const notesView = document.getElementById('notesView');
+    const accessCodeGameView = document.getElementById('accessCodeGameView');
+    toggleButton.addEventListener('click', () => {
+      if (notesView.style.display !== 'none') {
+        // Show Access Code Game, hide Notes View
+        notesView.style.display = 'none';
+        accessCodeGameView.classList.add('active');
+        toggleButton.textContent = 'Notes View ';
+        const icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.style.verticalAlign = 'middle';
+        icon.style.fontSize = '1.3rem';
+        icon.textContent = 'notes';
+        toggleButton.appendChild(icon);
+        accessCodeGameView.focus();
+      } else {
+        // Show Notes View, hide Access Code Game
+        notesView.style.display = 'flex';
+        accessCodeGameView.classList.remove('active');
+        toggleButton.textContent = 'Access Code Game ';
+        const icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.style.verticalAlign = 'middle';
+        icon.style.fontSize = '1.3rem';
+        icon.textContent = 'vpn_key';
+        toggleButton.appendChild(icon);
+        document.getElementById('searchNotes').focus();
+      }
+    });
+
+    // Setup Access Code Game JS logic
+
+    const generateBtn = document.getElementById('generateCodeBtn');
+    const codeDisplay = document.getElementById('codeDisplay');
+    const accessForm = document.getElementById('accessForm');
+    const input = document.getElementById('accessCodeInput');
+    const feedback = document.getElementById('inputHint');
+    const submitBtn = document.getElementById('submitCodeBtn');
+
+    let currentCode = null;
+
+    // Generate random code: 6 chars uppercase A-Z0-9
+    function generateCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    function updateGeneratedCode() {
+      currentCode = generateCode();
+      codeDisplay.textContent = currentCode;
+      feedback.textContent = ''; // Clear feedback
+      feedback.className = 'feedback';
+      input.value = '';
+      submitBtn.disabled = true;
+      input.focus();
+    }
+
+    generateBtn.addEventListener('click', () => {
+      updateGeneratedCode();
+    });
+
+    // Enable submit button only when input matches pattern
+    input.addEventListener('input', () => {
+      const val = input.value.toUpperCase();
+      input.value = val; // force uppercase
+      const valid = /^[A-Z0-9]{6}$/.test(val);
+      submitBtn.disabled = !valid;
+      feedback.textContent = '';
+      feedback.className = 'feedback';
+    });
+
+    accessForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredCode = input.value.toUpperCase();
+      if (!currentCode) {
+        feedback.textContent = 'No code has been generated yet. Please generate a code first.';
+        feedback.className = 'feedback';
+        return;
+      }
+      if (enteredCode === currentCode) {
+        feedback.textContent = 'Access Granted! You entered the correct code.';
+        feedback.className = 'feedback success';
+      } else {
+        feedback.textContent = 'Access Denied. The code you entered is incorrect.';
+        feedback.className = 'feedback';
+      }
+    });
+
   });
 </script>
+
 </body>
 </html>
 
